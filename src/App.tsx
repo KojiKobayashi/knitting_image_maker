@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { KnittingSettings, ProcessingResult, WorkerResponse, YarnColor } from './types';
+import type { KnittingSettings, ProcessingResult, WorkerResponse, YarnColor, ImageRect } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { PaletteUploader } from './components/PaletteUploader';
 import { SettingsPanel } from './components/SettingsPanel';
 import { ProcessButton } from './components/ProcessButton';
 import { ResultView } from './components/ResultView';
+import { RectSelector } from './components/RectSelector';
 import { DEFAULT_PALETTE } from './lib/defaultPalette';
 
 const DEFAULT_SETTINGS: KnittingSettings = {
@@ -24,6 +25,7 @@ export default function App() {
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [palette, setPalette] = useState<YarnColor[]>(DEFAULT_PALETTE);
   const [settings, setSettings] = useState<KnittingSettings>(DEFAULT_SETTINGS);
+  const [rect, setRect] = useState<ImageRect | null>(null);
   const [result, setResult] = useState<ProcessingResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -49,6 +51,7 @@ export default function App() {
     originalImageUrlRef.current = previewUrl;
     setOriginalImageUrl(previewUrl);
     setUploadedImage(imageData);
+    setRect({ x: 0, y: 0, width: imageData.width, height: imageData.height });
     setResult(null);
     setError(null);
     setProgress(0);
@@ -92,8 +95,8 @@ export default function App() {
       worker.terminate();
     };
 
-    worker.postMessage({ imageData: uploadedImage, palette, settings });
-  }, [uploadedImage, palette, settings]);
+    worker.postMessage({ imageData: uploadedImage, palette, settings, rect: rect ?? undefined });
+  }, [uploadedImage, palette, settings, rect]);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -130,18 +133,15 @@ export default function App() {
       <main className="flex-1 overflow-y-auto p-4 sm:p-6">
         {result ? (
           <ResultView result={result} originalImageUrl={originalImageUrl} />
-        ) : originalImageUrl ? (
+        ) : originalImageUrl && uploadedImage && rect ? (
           <div className="mx-auto max-w-6xl space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">元画像</h2>
-              <div className="border border-gray-200 rounded-lg overflow-auto max-h-[70vh] bg-white shadow-sm">
-                <img
-                  src={originalImageUrl}
-                  alt="アップロードした元画像"
-                  className="block max-w-full h-auto"
-                />
-              </div>
-            </div>
+            <RectSelector
+              imageUrl={originalImageUrl}
+              imageWidth={uploadedImage.width}
+              imageHeight={uploadedImage.height}
+              rect={rect}
+              onRectChange={setRect}
+            />
           </div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

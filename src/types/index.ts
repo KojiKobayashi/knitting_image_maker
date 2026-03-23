@@ -26,10 +26,18 @@ export interface ColorCount extends YarnColor {
   count: number;
 }
 
+export interface ImageRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface WorkerRequest {
   imageData: ImageData;
   palette: YarnColor[];
   settings: KnittingSettings;
+  rect?: ImageRect;
 }
 
 export interface WorkerResponse {

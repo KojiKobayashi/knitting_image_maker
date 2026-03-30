@@ -1,4 +1,4 @@
-import type { KnittingSettings, YarnColor, ColorCount } from '../types';
+import type { KnittingSettings, YarnColor, ColorCount, ImageRect } from '../types';
 import { rgbToLab, mapCentersToPalette } from './colorUtils';
 import { runKMeans } from './kmeans';
 
@@ -65,20 +65,37 @@ function cellStartY(row: number, settings: KnittingSettings): number {
 }
 
 
+function cropImageData(src: ImageData, rect: ImageRect): ImageData {
+  const x = Math.max(0, Math.round(rect.x));
+  const y = Math.max(0, Math.round(rect.y));
+  const w = Math.max(1, Math.min(Math.round(rect.width), src.width - x));
+  const h = Math.max(1, Math.min(Math.round(rect.height), src.height - y));
+  const canvas = new OffscreenCanvas(w, h);
+  const ctx = canvas.getContext('2d')!;
+  const srcCanvas = new OffscreenCanvas(src.width, src.height);
+  srcCanvas.getContext('2d')!.putImageData(src, 0, 0);
+  ctx.drawImage(srcCanvas, x, y, w, h, 0, 0, w, h);
+  return ctx.getImageData(0, 0, w, h);
+}
+
 export function processImageAndGetBlob(
   imageData: ImageData,
   palette: YarnColor[],
   settings: KnittingSettings,
-  onProgress: (p: number) => void
+  onProgress: (p: number) => void,
+  rect?: ImageRect
 ): { blob: Promise<Blob>; colorCounts: ColorCount[] } {
   // processImage の STEP 1-6 を実行してグリッド描画まで行い
   // Blob を Promise で返す（Worker専用）
 
+  // STEP 0: Crop to selected rect if provided
+  const cropped = rect ? cropImageData(imageData, rect) : imageData;
+
   // STEP 1
-  const [w1, h1] = constrainSize(imageData.width, imageData.height);
-  let current = (w1 !== imageData.width || h1 !== imageData.height)
-    ? resizeImageData(imageData, w1, h1)
-    : imageData;
+  const [w1, h1] = constrainSize(cropped.width, cropped.height);
+  let current = (w1 !== cropped.width || h1 !== cropped.height)
+    ? resizeImageData(cropped, w1, h1)
+    : cropped;
   onProgress(0.1);
 
   // STEP 2

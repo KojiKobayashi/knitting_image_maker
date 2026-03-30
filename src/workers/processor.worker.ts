@@ -2,7 +2,7 @@ import type { WorkerRequest, WorkerResponse, ProcessingResult } from '../types';
 import { processImageAndGetBlob } from '../lib/imageProcessor';
 
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
-  const { imageData, palette, settings } = e.data;
+  const { imageData, palette, settings, rect } = e.data;
   try {
     postMessage({ type: 'progress', progress: 0.0 } satisfies WorkerResponse);
 
@@ -12,7 +12,8 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       settings,
       (p) => {
         postMessage({ type: 'progress', progress: p } satisfies WorkerResponse);
-      }
+      },
+      rect
     );
 
     const resolvedBlob = await blob;

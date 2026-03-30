@@ -1,4 +1,4 @@
-import type { ProcessingResult } from '../types';
+import type { ProcessingResult, ImageRect } from '../types';
 
 function getAmazonProductUrl(asin: string): string {
   return `https://www.amazon.co.jp/dp/${asin}`;
@@ -7,10 +7,22 @@ function getAmazonProductUrl(asin: string): string {
 interface ResultViewProps {
   result: ProcessingResult;
   originalImageUrl?: string | null;
+  rect?: ImageRect | null;
+  imageSize?: { width: number; height: number } | null;
+  onBackToRectSelect?: () => void;
 }
 
-export function ResultView({ result, originalImageUrl }: ResultViewProps) {
+export function ResultView({ result, originalImageUrl, rect, imageSize, onBackToRectSelect }: ResultViewProps) {
   const { pixelImageDataUrl, colorCounts } = result;
+
+  const isFullImage = !rect || !imageSize ||
+    (rect.x === 0 && rect.y === 0 &&
+     rect.width === imageSize.width && rect.height === imageSize.height);
+
+  const rectLeft   = rect && imageSize ? (rect.x / imageSize.width) * 100 : 0;
+  const rectTop    = rect && imageSize ? (rect.y / imageSize.height) * 100 : 0;
+  const rectWidth  = rect && imageSize ? (rect.width / imageSize.width) * 100 : 100;
+  const rectHeight = rect && imageSize ? (rect.height / imageSize.height) * 100 : 100;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -20,26 +32,86 @@ export function ResultView({ result, originalImageUrl }: ResultViewProps) {
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-semibold text-gray-800">元画像</h2>
             </div>
-            <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
+            <div className="relative border border-gray-200 rounded-lg overflow-hidden max-h-[65vh] bg-white shadow-sm">
               <img
                 src={originalImageUrl}
                 alt="アップロードした元画像"
                 className="block max-w-full h-auto"
               />
+              {/* Rect overlay: only when a sub-region was selected */}
+              {!isFullImage && (
+                <>
+                  {/* Top */}
+                  <div
+                    className="absolute top-0 left-0 right-0 bg-black bg-opacity-40 pointer-events-none"
+                    style={{ height: `${rectTop}%` }}
+                  />
+                  {/* Bottom */}
+                  <div
+                    className="absolute left-0 right-0 bottom-0 bg-black bg-opacity-40 pointer-events-none"
+                    style={{ top: `${rectTop + rectHeight}%` }}
+                  />
+                  {/* Left */}
+                  <div
+                    className="absolute bg-black bg-opacity-40 pointer-events-none"
+                    style={{
+                      top: `${rectTop}%`,
+                      left: 0,
+                      width: `${rectLeft}%`,
+                      height: `${rectHeight}%`,
+                    }}
+                  />
+                  {/* Right */}
+                  <div
+                    className="absolute bg-black bg-opacity-40 pointer-events-none"
+                    style={{
+                      top: `${rectTop}%`,
+                      left: `${rectLeft + rectWidth}%`,
+                      right: 0,
+                      height: `${rectHeight}%`,
+                    }}
+                  />
+                  {/* Selection border */}
+                  <div
+                    className="absolute border-2 border-blue-400 pointer-events-none box-border"
+                    style={{
+                      left: `${rectLeft}%`,
+                      top: `${rectTop}%`,
+                      width: `${rectWidth}%`,
+                      height: `${rectHeight}%`,
+                    }}
+                  />
+                </>
+              )}
             </div>
+            {!isFullImage && rect && (
+              <p className="text-xs text-gray-500 mt-1">
+                処理範囲: ({Math.round(rect.x)}, {Math.round(rect.y)}) — {Math.round(rect.width)} × {Math.round(rect.height)} px
+              </p>
+            )}
           </section>
         )}
 
         <section className="min-w-0">
           <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-gray-800">生成結果</h2>
-            <a
-              href={pixelImageDataUrl}
-              download="knitting-pattern.png"
-              className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
-            >
-              PNG ダウンロード
-            </a>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {onBackToRectSelect && (
+                <button
+                  onClick={onBackToRectSelect}
+                  className="inline-flex w-full justify-center rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300 sm:w-auto"
+                >
+                  矩形選択に戻る
+                </button>
+              )}
+              <a
+                href={pixelImageDataUrl}
+                download="knitting-pattern.png"
+                className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
+              >
+                PNG ダウンロード
+              </a>
+            </div>
           </div>
           <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
             <img

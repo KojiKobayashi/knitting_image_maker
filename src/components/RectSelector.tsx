@@ -99,6 +99,7 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
       <div
         ref={containerRef}
         className="relative border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-crosshair select-none"
+        style={{ width: 'fit-content' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

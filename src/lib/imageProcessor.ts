@@ -45,6 +45,20 @@ function removeNoise(labelImage: Uint8Array, width: number, height: number): voi
   }
 }
 
+export function calcImageInfo(
+  settings: KnittingSettings,
+  rectWidth: number,
+  rectHeight: number
+): { cellCols: number; cellRows: number; outWidth: number; outHeight: number } {
+  const cellCols = settings.horizontalCells;
+  const cellRows = Math.max(
+    1,
+    Math.round((rectHeight / rectWidth) * (settings.cellWidth / settings.cellHeight) * cellCols)
+  );
+  const [outWidth, outHeight] = calcOutputSize(cellCols, cellRows, settings);
+  return { cellCols, cellRows, outWidth, outHeight };
+}
+
 function calcOutputSize(cellCols: number, cellRows: number, settings: KnittingSettings): [number, number] {
   const { cellWidth, cellHeight, lineThickness, thickLineThickness, thickLineInterval } = settings;
   const extraW = Math.floor(cellCols / thickLineInterval) * (thickLineThickness - lineThickness);

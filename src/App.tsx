@@ -6,6 +6,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { ProcessButton } from './components/ProcessButton';
 import { ResultView } from './components/ResultView';
 import { RectSelector } from './components/RectSelector';
+import { ImageInfoPanel } from './components/ImageInfoPanel';
 import { DEFAULT_PALETTE } from './lib/defaultPalette';
 
 const DEFAULT_SETTINGS: KnittingSettings = {
@@ -120,6 +121,7 @@ export default function App() {
             <h2 className="text-sm font-semibold text-gray-700 mb-3">変換設定</h2>
             <SettingsPanel settings={settings} onChange={setSettings} />
           </div>
+          <ImageInfoPanel settings={settings} rect={rect} uploadedImage={uploadedImage} />
         </div>
 
         <div className="p-4 border-t">

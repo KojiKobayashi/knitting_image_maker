@@ -32,7 +32,8 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-semibold text-gray-800">元画像</h2>
             </div>
-            <div className="relative border border-gray-200 rounded-lg overflow-hidden max-h-[65vh] bg-white shadow-sm">
+            <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
+              <div className="relative" style={{ width: 'fit-content' }}>
               <img
                 src={originalImageUrl}
                 alt="アップロードした元画像"
@@ -83,6 +84,7 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
                   />
                 </>
               )}
+              </div>
             </div>
             {!isFullImage && rect && (
               <p className="text-xs text-gray-500 mt-1">

@@ -6,7 +6,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   try {
     postMessage({ type: 'progress', progress: 0.0 } satisfies WorkerResponse);
 
-    const { blob, colorCounts } = processImageAndGetBlob(
+    const { blob, colorCounts, cellGrid, cellCols, cellRows } = processImageAndGetBlob(
       imageData,
       palette,
       settings,
@@ -21,7 +21,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     const base64 = arrayBufferToBase64(arrayBuffer);
     const pixelImageDataUrl = `data:image/png;base64,${base64}`;
 
-    const result: ProcessingResult = { pixelImageDataUrl, colorCounts };
+    const result: ProcessingResult = { pixelImageDataUrl, colorCounts, cellGrid, cellCols, cellRows, settings };
     postMessage({ type: 'done', result } satisfies WorkerResponse);
   } catch (err) {
     postMessage({ type: 'error', error: String(err) } satisfies WorkerResponse);

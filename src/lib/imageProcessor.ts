@@ -68,12 +68,12 @@ function calcOutputSize(cellCols: number, cellRows: number, settings: KnittingSe
   return [width, height];
 }
 
-function cellStartX(col: number, settings: KnittingSettings): number {
+export function cellStartX(col: number, settings: KnittingSettings): number {
   return col * (settings.cellWidth + settings.lineThickness)
        + Math.floor(col / settings.thickLineInterval) * (settings.thickLineThickness - settings.lineThickness);
 }
 
-function cellStartY(row: number, settings: KnittingSettings): number {
+export function cellStartY(row: number, settings: KnittingSettings): number {
   return row * (settings.cellHeight + settings.lineThickness)
        + Math.floor(row / settings.thickLineInterval) * (settings.thickLineThickness - settings.lineThickness);
 }
@@ -98,7 +98,7 @@ export function processImageAndGetBlob(
   settings: KnittingSettings,
   onProgress: (p: number) => void,
   rect?: ImageRect
-): { blob: Promise<Blob>; colorCounts: ColorCount[] } {
+): { blob: Promise<Blob>; colorCounts: ColorCount[]; cellGrid: YarnColor[][]; cellCols: number; cellRows: number } {
   // processImage の STEP 1-6 を実行してグリッド描画まで行い
   // Blob を Promise で返す（Worker専用）
 
@@ -180,11 +180,13 @@ export function processImageAndGetBlob(
   ctx.fillRect(0, 0, outW, outH);
 
   const colorCountMap = new Map<string, { color: YarnColor; count: number }>();
+  const cellGrid: YarnColor[][] = Array.from({ length: cellRows }, () => new Array(cellCols));
 
   for (let row = 0; row < cellRows; row++) {
     for (let col = 0; col < cellCols; col++) {
       const label = smallLabels[row * cellCols + col];
       const yarn = mappedColors[label] ?? mappedColors[0];
+      cellGrid[row][col] = yarn;
       const [r, g, b] = yarn.rgb;
       ctx.fillStyle = `rgb(${r},${g},${b})`;
       ctx.fillRect(
@@ -213,5 +215,39 @@ export function processImageAndGetBlob(
   return {
     blob: outCanvas.convertToBlob({ type: 'image/png' }),
     colorCounts,
+    cellGrid,
+    cellCols,
+    cellRows,
   };
+}
+
+export function renderCellGridToBlob(
+  cellGrid: YarnColor[][],
+  settings: KnittingSettings
+): Promise<Blob> {
+  const cellRows = cellGrid.length;
+  const cellCols = cellGrid[0]?.length ?? 0;
+  const [outW, outH] = calcOutputSize(cellCols, cellRows, settings);
+  const outCanvas = new OffscreenCanvas(outW, outH);
+  const ctx = outCanvas.getContext('2d')!;
+
+  ctx.fillStyle = `rgb(${GRID_COLOR[0]},${GRID_COLOR[1]},${GRID_COLOR[2]})`;
+  ctx.fillRect(0, 0, outW, outH);
+
+  for (let row = 0; row < cellRows; row++) {
+    for (let col = 0; col < cellCols; col++) {
+      const yarn = cellGrid[row][col];
+      if (!yarn) continue;
+      const [r, g, b] = yarn.rgb;
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(
+        cellStartX(col, settings),
+        cellStartY(row, settings),
+        settings.cellWidth,
+        settings.cellHeight
+      );
+    }
+  }
+
+  return outCanvas.convertToBlob({ type: 'image/png' });
 }

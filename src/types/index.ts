@@ -20,6 +20,10 @@ export interface KnittingSettings {
 export interface ProcessingResult {
   pixelImageDataUrl: string;
   colorCounts: ColorCount[];
+  cellGrid: YarnColor[][];
+  cellCols: number;
+  cellRows: number;
+  settings: KnittingSettings;
 }
 
 export interface ColorCount extends YarnColor {

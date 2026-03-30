@@ -9,9 +9,10 @@ interface ResultViewProps {
   originalImageUrl?: string | null;
   rect?: ImageRect | null;
   imageSize?: { width: number; height: number } | null;
+  onBackToRectSelect?: () => void;
 }
 
-export function ResultView({ result, originalImageUrl, rect, imageSize }: ResultViewProps) {
+export function ResultView({ result, originalImageUrl, rect, imageSize, onBackToRectSelect }: ResultViewProps) {
   const { pixelImageDataUrl, colorCounts } = result;
 
   const isFullImage = !rect || !imageSize ||
@@ -94,13 +95,23 @@ export function ResultView({ result, originalImageUrl, rect, imageSize }: Result
         <section className="min-w-0">
           <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-gray-800">生成結果</h2>
-            <a
-              href={pixelImageDataUrl}
-              download="knitting-pattern.png"
-              className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
-            >
-              PNG ダウンロード
-            </a>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {onBackToRectSelect && (
+                <button
+                  onClick={onBackToRectSelect}
+                  className="inline-flex w-full justify-center rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300 sm:w-auto"
+                >
+                  矩形選択に戻る
+                </button>
+              )}
+              <a
+                href={pixelImageDataUrl}
+                download="knitting-pattern.png"
+                className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
+              >
+                PNG ダウンロード
+              </a>
+            </div>
           </div>
           <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
             <img

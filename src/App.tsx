@@ -26,6 +26,8 @@ export default function App() {
   const [palette, setPalette] = useState<YarnColor[]>(DEFAULT_PALETTE);
   const [settings, setSettings] = useState<KnittingSettings>(DEFAULT_SETTINGS);
   const [rect, setRect] = useState<ImageRect | null>(null);
+  const [processedRect, setProcessedRect] = useState<ImageRect | null>(null);
+  const [processedImageSize, setProcessedImageSize] = useState<{ width: number; height: number } | null>(null);
   const [result, setResult] = useState<ProcessingResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -52,6 +54,8 @@ export default function App() {
     setOriginalImageUrl(previewUrl);
     setUploadedImage(imageData);
     setRect({ x: 0, y: 0, width: imageData.width, height: imageData.height });
+    setProcessedRect(null);
+    setProcessedImageSize(null);
     setResult(null);
     setError(null);
     setProgress(0);
@@ -66,6 +70,8 @@ export default function App() {
     setIsProcessing(true);
     setProgress(0);
     setError(null);
+    setProcessedRect(rect);
+    setProcessedImageSize(uploadedImage ? { width: uploadedImage.width, height: uploadedImage.height } : null);
 
     const worker = new Worker(
       new URL('./workers/processor.worker.ts', import.meta.url),
@@ -132,7 +138,7 @@ export default function App() {
       {/* メインエリア（結果） */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6">
         {result ? (
-          <ResultView result={result} originalImageUrl={originalImageUrl} />
+          <ResultView result={result} originalImageUrl={originalImageUrl} rect={processedRect} imageSize={processedImageSize} />
         ) : originalImageUrl && uploadedImage && rect ? (
           <div className="mx-auto max-w-6xl space-y-4">
             <RectSelector

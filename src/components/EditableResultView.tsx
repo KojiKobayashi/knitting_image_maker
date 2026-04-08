@@ -151,6 +151,16 @@ export function EditableResultView({
     };
   }, []);
 
+  // When a new generation result arrives, discard any edits and reset to the fresh result
+  useEffect(() => {
+    if (editedBlobUrlRef.current) {
+      URL.revokeObjectURL(editedBlobUrlRef.current);
+      editedBlobUrlRef.current = null;
+    }
+    setCurrentResult(result);
+    setIsEditMode(false);
+  }, [result]);
+
   const isFullImage =
     !rect ||
     !imageSize ||

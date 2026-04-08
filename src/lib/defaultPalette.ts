@@ -34,7 +34,7 @@ export const DEFAULT_PALETTE: YarnColor[] = [
   { type: "茶",    colorNumber: "031", rgb: [109,  69,  49], asin: "B0B7QZJ2G9" },
   { type: "茶",    colorNumber: "036", rgb: [ 72,  47,  39], asin: "B0B7QWY4D6" },
   { type: "茶",    colorNumber: "037", rgb: [ 66,  42,  44], asin: "B0B7R2GNJC" },
-  { type: "茶",    colorNumber: "142", rgb: [141, 118, 103], asin: "" },
+  { type: "茶",    colorNumber: "142", rgb: [141, 118, 103], asin: "B0B5G6V5BK" },
   { type: "茶",    colorNumber: "141", rgb: [161, 144, 116], asin: "B0B5G6TN86" },
   { type: "ベージュ", colorNumber: "027", rgb: [237, 214, 171], asin: "B0B7QQKJVP" },
   { type: "ベージュ", colorNumber: "139", rgb: [229, 209, 182], asin: "B0B7QH1K19" },

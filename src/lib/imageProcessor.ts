@@ -4,6 +4,15 @@ import { runKMeans } from './kmeans';
 
 const GRID_COLOR: [number, number, number] = [200, 200, 200];
 
+// Font size as a fraction of the smaller cell dimension for numbered image rendering
+const FONT_SIZE_RATIO = 0.45;
+
+// ITU-R BT.709 relative luminance coefficients and dark/light text threshold
+const LUMINANCE_RED_WEIGHT = 0.2126;
+const LUMINANCE_GREEN_WEIGHT = 0.7152;
+const LUMINANCE_BLUE_WEIGHT = 0.0722;
+const LUMINANCE_THRESHOLD = 0.45;
+
 function constrainSize(width: number, height: number, maxSize = 2048): [number, number] {
   const maxDim = Math.max(width, height);
   if (maxDim <= maxSize) return [width, height];
@@ -241,7 +250,7 @@ export function renderCellGridWithNumbersToBlob(
     colorNumberMap.set(`${cc.type}::${cc.colorNumber}`, cc.colorNumber);
   }
 
-  const fontSize = Math.max(6, Math.min(settings.cellWidth, settings.cellHeight) * 0.45);
+  const fontSize = Math.max(6, Math.min(settings.cellWidth, settings.cellHeight) * FONT_SIZE_RATIO);
   ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -258,8 +267,8 @@ export function renderCellGridWithNumbersToBlob(
       ctx.fillRect(sx, sy, settings.cellWidth, settings.cellHeight);
 
       // Use white text on dark cells, black text on light cells
-      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-      ctx.fillStyle = luminance > 0.45 ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
+      const luminance = (LUMINANCE_RED_WEIGHT * r + LUMINANCE_GREEN_WEIGHT * g + LUMINANCE_BLUE_WEIGHT * b) / 255;
+      ctx.fillStyle = luminance > LUMINANCE_THRESHOLD ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
 
       const label = colorNumberMap.get(`${yarn.type}::${yarn.colorNumber}`) ?? yarn.colorNumber;
       ctx.fillText(label, sx + settings.cellWidth / 2, sy + settings.cellHeight / 2);

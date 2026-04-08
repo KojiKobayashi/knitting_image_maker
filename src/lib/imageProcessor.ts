@@ -221,6 +221,54 @@ export function processImageAndGetBlob(
   };
 }
 
+export function renderCellGridWithNumbersToBlob(
+  cellGrid: YarnColor[][],
+  settings: KnittingSettings,
+  colorCounts: ColorCount[]
+): Promise<Blob> {
+  const cellRows = cellGrid.length;
+  const cellCols = cellGrid[0]?.length ?? 0;
+  const [outW, outH] = calcOutputSize(cellCols, cellRows, settings);
+  const outCanvas = new OffscreenCanvas(outW, outH);
+  const ctx = outCanvas.getContext('2d')!;
+
+  ctx.fillStyle = `rgb(${GRID_COLOR[0]},${GRID_COLOR[1]},${GRID_COLOR[2]})`;
+  ctx.fillRect(0, 0, outW, outH);
+
+  // Map colorKey -> colorNumber string for labeling
+  const colorNumberMap = new Map<string, string>();
+  for (const cc of colorCounts) {
+    colorNumberMap.set(`${cc.type}::${cc.colorNumber}`, cc.colorNumber);
+  }
+
+  const fontSize = Math.max(6, Math.min(settings.cellWidth, settings.cellHeight) * 0.45);
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let row = 0; row < cellRows; row++) {
+    for (let col = 0; col < cellCols; col++) {
+      const yarn = cellGrid[row][col];
+      if (!yarn) continue;
+      const [r, g, b] = yarn.rgb;
+      const sx = cellStartX(col, settings);
+      const sy = cellStartY(row, settings);
+
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(sx, sy, settings.cellWidth, settings.cellHeight);
+
+      // Use white text on dark cells, black text on light cells
+      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      ctx.fillStyle = luminance > 0.45 ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
+
+      const label = colorNumberMap.get(`${yarn.type}::${yarn.colorNumber}`) ?? yarn.colorNumber;
+      ctx.fillText(label, sx + settings.cellWidth / 2, sy + settings.cellHeight / 2);
+    }
+  }
+
+  return outCanvas.convertToBlob({ type: 'image/png' });
+}
+
 export function renderCellGridToBlob(
   cellGrid: YarnColor[][],
   settings: KnittingSettings

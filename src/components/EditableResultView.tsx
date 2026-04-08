@@ -140,6 +140,16 @@ export function EditableResultView({
   onBackToRectSelect,
 }: ResultViewProps) {
   const [isEditMode, setIsEditMode] = useState(false);
+  // Local copy of result that gets updated when the user exits edit mode with changes
+  const [currentResult, setCurrentResult] = useState<ProcessingResult>(result);
+  // Track any blob URL we create so we can revoke it on unmount
+  const editedBlobUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (editedBlobUrlRef.current) URL.revokeObjectURL(editedBlobUrlRef.current);
+    };
+  }, []);
 
   const isFullImage =
     !rect ||
@@ -155,7 +165,22 @@ export function EditableResultView({
   const rectHeight = rect && imageSize ? (rect.height / imageSize.height) * 100 : 100;
 
   if (isEditMode) {
-    return <EditMode result={result} onExitEdit={() => setIsEditMode(false)} />;
+    return (
+      <EditMode
+        result={currentResult}
+        onExitEdit={(updated) => {
+          // Revoke previous edited blob URL (if any) before replacing
+          if (editedBlobUrlRef.current) {
+            URL.revokeObjectURL(editedBlobUrlRef.current);
+          }
+          if (updated.pixelImageDataUrl.startsWith('blob:')) {
+            editedBlobUrlRef.current = updated.pixelImageDataUrl;
+          }
+          setCurrentResult(updated);
+          setIsEditMode(false);
+        }}
+      />
+    );
   }
 
   return (
@@ -242,7 +267,7 @@ export function EditableResultView({
                 ✏️ 編集モード
               </button>
               <a
-                href={result.pixelImageDataUrl}
+                href={currentResult.pixelImageDataUrl}
                 download="knitting-pattern.png"
                 className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
               >
@@ -252,7 +277,7 @@ export function EditableResultView({
           </div>
           <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
             <img
-              src={result.pixelImageDataUrl}
+              src={currentResult.pixelImageDataUrl}
               alt="編み図"
               className="block max-w-full h-auto"
             />
@@ -260,7 +285,7 @@ export function EditableResultView({
         </section>
       </div>
 
-      <ColorCountTable colorCounts={result.colorCounts} />
+      <ColorCountTable colorCounts={currentResult.colorCounts} />
     </div>
   );
 }
@@ -365,7 +390,7 @@ function EditMode({
   onExitEdit,
 }: {
   result: ProcessingResult;
-  onExitEdit: () => void;
+  onExitEdit: (updated: ProcessingResult) => void;
 }) {
   const { cellCols, cellRows, settings } = result;
 
@@ -381,6 +406,7 @@ function EditMode({
   const [tool, setTool] = useState<Tool>('paint');
   const [hoverCell, setHoverCell] = useState<{ row: number; col: number } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   // Refs for drag painting (no React state updates mid-drag)
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -570,6 +596,26 @@ function EditMode({
     }
   }, [settings]);
 
+  // ── exit edit (re-render grid and pass updated result back) ────────────────
+
+  const handleExitEdit = useCallback(async () => {
+    setIsExiting(true);
+    try {
+      const grid = currentDragGridRef.current;
+      const newColorCounts = calcColorCounts(grid);
+      const blob = await renderCellGridToBlob(grid, settings);
+      const pixelImageDataUrl = URL.createObjectURL(blob);
+      onExitEdit({
+        ...result,
+        pixelImageDataUrl,
+        colorCounts: newColorCounts,
+        cellGrid: grid,
+      });
+    } catch {
+      setIsExiting(false);
+    }
+  }, [result, settings, onExitEdit]);
+
   // ── render ──────────────────────────────────────────────────────────────────
 
   const canUndo = historyIndex > 0;
@@ -649,10 +695,11 @@ function EditMode({
           {isDownloading ? '⏳ 生成中…' : '⬇ PNG ダウンロード'}
         </button>
         <button
-          onClick={onExitEdit}
-          className="inline-flex items-center gap-1 rounded-lg bg-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-300 transition-colors"
+          onClick={handleExitEdit}
+          disabled={isExiting}
+          className="inline-flex items-center gap-1 rounded-lg bg-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-60 transition-colors"
         >
-          ✕ 編集終了
+          {isExiting ? '⏳ 反映中…' : '✓ 編集終了'}
         </button>
       </div>
 

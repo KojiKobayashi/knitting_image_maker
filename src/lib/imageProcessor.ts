@@ -4,6 +4,15 @@ import { runKMeans } from './kmeans';
 
 const GRID_COLOR: [number, number, number] = [200, 200, 200];
 
+// Font size as a fraction of the smaller cell dimension for numbered image rendering
+const FONT_SIZE_RATIO = 0.45;
+
+// ITU-R BT.709 relative luminance coefficients and dark/light text threshold
+const LUMINANCE_RED_WEIGHT = 0.2126;
+const LUMINANCE_GREEN_WEIGHT = 0.7152;
+const LUMINANCE_BLUE_WEIGHT = 0.0722;
+const LUMINANCE_THRESHOLD = 0.45;
+
 function constrainSize(width: number, height: number, maxSize = 2048): [number, number] {
   const maxDim = Math.max(width, height);
   if (maxDim <= maxSize) return [width, height];
@@ -219,6 +228,54 @@ export function processImageAndGetBlob(
     cellCols,
     cellRows,
   };
+}
+
+export function renderCellGridWithNumbersToBlob(
+  cellGrid: YarnColor[][],
+  settings: KnittingSettings,
+  colorCounts: ColorCount[]
+): Promise<Blob> {
+  const cellRows = cellGrid.length;
+  const cellCols = cellGrid[0]?.length ?? 0;
+  const [outW, outH] = calcOutputSize(cellCols, cellRows, settings);
+  const outCanvas = new OffscreenCanvas(outW, outH);
+  const ctx = outCanvas.getContext('2d')!;
+
+  ctx.fillStyle = `rgb(${GRID_COLOR[0]},${GRID_COLOR[1]},${GRID_COLOR[2]})`;
+  ctx.fillRect(0, 0, outW, outH);
+
+  // Map colorKey -> colorNumber string for labeling
+  const colorNumberMap = new Map<string, string>();
+  for (const cc of colorCounts) {
+    colorNumberMap.set(`${cc.type}::${cc.colorNumber}`, cc.colorNumber);
+  }
+
+  const fontSize = Math.max(6, Math.min(settings.cellWidth, settings.cellHeight) * FONT_SIZE_RATIO);
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let row = 0; row < cellRows; row++) {
+    for (let col = 0; col < cellCols; col++) {
+      const yarn = cellGrid[row][col];
+      if (!yarn) continue;
+      const [r, g, b] = yarn.rgb;
+      const sx = cellStartX(col, settings);
+      const sy = cellStartY(row, settings);
+
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(sx, sy, settings.cellWidth, settings.cellHeight);
+
+      // Use white text on dark cells, black text on light cells
+      const luminance = (LUMINANCE_RED_WEIGHT * r + LUMINANCE_GREEN_WEIGHT * g + LUMINANCE_BLUE_WEIGHT * b) / 255;
+      ctx.fillStyle = luminance > LUMINANCE_THRESHOLD ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
+
+      const label = colorNumberMap.get(`${yarn.type}::${yarn.colorNumber}`) ?? yarn.colorNumber;
+      ctx.fillText(label, sx + settings.cellWidth / 2, sy + settings.cellHeight / 2);
+    }
+  }
+
+  return outCanvas.convertToBlob({ type: 'image/png' });
 }
 
 export function renderCellGridToBlob(

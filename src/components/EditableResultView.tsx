@@ -1,6 +1,21 @@
 import { useState, useRef, useEffect, useCallback, useMemo, useReducer } from 'react';
 import type { ProcessingResult, YarnColor, ColorCount, ImageRect, KnittingSettings } from '../types';
-import { cellStartX, cellStartY, renderCellGridToBlob } from '../lib/imageProcessor';
+import { cellStartX, cellStartY, renderCellGridToBlob, renderCellGridWithNumbersToBlob } from '../lib/imageProcessor';
+
+// ─── CSV download helper ───────────────────────────────────────────────────────
+
+function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): void {
+  const header = '系統,色番,セル数';
+  const rows = colorCounts.map((c) => `${c.type},${c.colorNumber},${c.count}`);
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -142,6 +157,7 @@ export function EditableResultView({
   const [isEditMode, setIsEditMode] = useState(false);
   // Local copy of result that gets updated when the user exits edit mode with changes
   const [currentResult, setCurrentResult] = useState<ProcessingResult>(result);
+  const [isDownloadingNumbered, setIsDownloadingNumbered] = useState(false);
   // Track any blob URL we create so we can revoke it on unmount
   const editedBlobUrlRef = useRef<string | null>(null);
 
@@ -173,6 +189,29 @@ export function EditableResultView({
   const rectTop = rect && imageSize ? (rect.y / imageSize.height) * 100 : 0;
   const rectWidth = rect && imageSize ? (rect.width / imageSize.width) * 100 : 100;
   const rectHeight = rect && imageSize ? (rect.height / imageSize.height) * 100 : 100;
+
+  const handleDownloadNumberedPng = useCallback(async () => {
+    setIsDownloadingNumbered(true);
+    try {
+      const blob = await renderCellGridWithNumbersToBlob(
+        currentResult.cellGrid,
+        currentResult.settings,
+        currentResult.colorCounts,
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'knitting-pattern-numbered.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsDownloadingNumbered(false);
+    }
+  }, [currentResult]);
+
+  const handleDownloadCsv = useCallback(() => {
+    downloadColorCountsCsv(currentResult.colorCounts, 'knitting-colors.csv');
+  }, [currentResult.colorCounts]);
 
   if (isEditMode) {
     return (
@@ -283,6 +322,19 @@ export function EditableResultView({
               >
                 PNG ダウンロード
               </a>
+              <button
+                onClick={handleDownloadNumberedPng}
+                disabled={isDownloadingNumbered}
+                className="inline-flex w-full justify-center rounded-lg bg-teal-600 px-3 py-2 text-sm text-white transition-colors hover:bg-teal-700 disabled:opacity-60 sm:w-auto"
+              >
+                {isDownloadingNumbered ? '⏳ 生成中…' : '🔢 番号付き PNG'}
+              </button>
+              <button
+                onClick={handleDownloadCsv}
+                className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
+              >
+                📄 CSV ダウンロード
+              </button>
             </div>
           </div>
           <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
@@ -416,6 +468,7 @@ function EditMode({
   const [tool, setTool] = useState<Tool>('paint');
   const [hoverCell, setHoverCell] = useState<{ row: number; col: number } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingNumbered, setIsDownloadingNumbered] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
   // Refs for drag painting (no React state updates mid-drag)
@@ -606,6 +659,29 @@ function EditMode({
     }
   }, [settings]);
 
+  const handleDownloadNumbered = useCallback(async () => {
+    setIsDownloadingNumbered(true);
+    try {
+      const grid = currentDragGridRef.current;
+      const counts = calcColorCounts(grid);
+      const blob = await renderCellGridWithNumbersToBlob(grid, settings, counts);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+      a.download = `knitting-pattern-numbered-${timestamp}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsDownloadingNumbered(false);
+    }
+  }, [settings]);
+
+  const handleDownloadCsvEdit = useCallback(() => {
+    const counts = calcColorCounts(currentDragGridRef.current);
+    downloadColorCountsCsv(counts, 'knitting-colors.csv');
+  }, []);
+
   // ── exit edit (re-render grid and pass updated result back) ────────────────
 
   const handleExitEdit = useCallback(async () => {
@@ -703,6 +779,19 @@ function EditMode({
           className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-60 transition-colors"
         >
           {isDownloading ? '⏳ 生成中…' : '⬇ PNG ダウンロード'}
+        </button>
+        <button
+          onClick={handleDownloadNumbered}
+          disabled={isDownloadingNumbered}
+          className="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-1.5 text-sm text-white hover:bg-teal-700 disabled:opacity-60 transition-colors"
+        >
+          {isDownloadingNumbered ? '⏳ 生成中…' : '🔢 番号付き PNG'}
+        </button>
+        <button
+          onClick={handleDownloadCsvEdit}
+          className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 transition-colors"
+        >
+          📄 CSV ダウンロード
         </button>
         <button
           onClick={handleExitEdit}

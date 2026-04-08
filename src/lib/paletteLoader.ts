@@ -23,7 +23,7 @@ function decodeWithBom(buffer: ArrayBuffer): string {
   // No BOM: try each encoding, pick the first that decodes without replacement characters
   for (const encoding of ENCODINGS_TO_TRY) {
     const decoded = new TextDecoder(encoding, { fatal: false }).decode(buffer);
-    if (!decoded.includes('\uFFFD')) {
+    if (decoded.indexOf('\uFFFD') === -1) {
       return decoded;
     }
   }

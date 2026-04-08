@@ -4,7 +4,7 @@ import { ImageUploader } from './components/ImageUploader';
 import { PaletteUploader } from './components/PaletteUploader';
 import { SettingsPanel } from './components/SettingsPanel';
 import { ProcessButton } from './components/ProcessButton';
-import { ResultView } from './components/ResultView';
+import { EditableResultView } from './components/EditableResultView';
 import { RectSelector } from './components/RectSelector';
 import { ImageInfoPanel } from './components/ImageInfoPanel';
 import { DEFAULT_PALETTE } from './lib/defaultPalette';
@@ -140,7 +140,7 @@ export default function App() {
       {/* メインエリア（結果） */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6">
         {result ? (
-          <ResultView result={result} originalImageUrl={originalImageUrl} rect={processedRect} imageSize={processedImageSize} onBackToRectSelect={() => setResult(null)} />
+          <EditableResultView result={result} originalImageUrl={originalImageUrl} rect={processedRect} imageSize={processedImageSize} onBackToRectSelect={() => setResult(null)} />
         ) : originalImageUrl && uploadedImage && rect ? (
           <div className="mx-auto max-w-6xl space-y-4">
             <RectSelector

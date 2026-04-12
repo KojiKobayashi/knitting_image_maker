@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS: KnittingSettings = {
   thickLineInterval: 5,
   denoise: false,
   useSamplingForKMeans: false,
+  labLWeight: 1,
 };
 
 export default function App() {

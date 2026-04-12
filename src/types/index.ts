@@ -15,6 +15,7 @@ export interface KnittingSettings {
   thickLineInterval: number;
   denoise: boolean;
   useSamplingForKMeans: boolean;
+  labLWeight: number;
 }
 
 export interface ProcessingResult {

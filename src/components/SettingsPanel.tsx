@@ -172,6 +172,24 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
                 K-means でサンプリング画素を使う
               </label>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                L重み (明度 vs 色): {settings.labLWeight.toFixed(1)}
+              </label>
+              <input
+                type="range"
+                min={0.5}
+                max={4.0}
+                step={0.1}
+                value={settings.labLWeight}
+                onChange={(e) => update('labLWeight', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>色重視 (0.5)</span><span>明度重視 (4.0)</span>
+              </div>
+            </div>
           </div>
         )}
       </div>

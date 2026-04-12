@@ -1,10 +1,10 @@
 // K-means クラスタリング（LAB色空間）
 
-function distSq(pixels: Float32Array, pidx: number, centers: Float32Array, cidx: number): number {
+function distSq(pixels: Float32Array, pidx: number, centers: Float32Array, cidx: number, lWeight = 1): number {
   const dL = pixels[pidx] - centers[cidx];
   const da = pixels[pidx + 1] - centers[cidx + 1];
   const db = pixels[pidx + 2] - centers[cidx + 2];
-  return dL * dL + da * da + db * db;
+  return lWeight * dL * dL + da * da + db * db;
 }
 
 function createSeededRandom(seed: number): () => number {
@@ -35,7 +35,8 @@ function kMeansPlusPlus(
   pixels: Float32Array,
   n: number,
   k: number,
-  random: () => number
+  random: () => number,
+  lWeight: number
 ): Float32Array {
   const centers = new Float32Array(k * 3);
   // 最初のセンターをランダムに選択
@@ -51,7 +52,7 @@ function kMeansPlusPlus(
     for (let i = 0; i < n; i++) {
       let minD = Infinity;
       for (let j = 0; j < ci; j++) {
-        const d = distSq(pixels, i * 3, centers, j * 3);
+        const d = distSq(pixels, i * 3, centers, j * 3, lWeight);
         if (d < minD) minD = d;
       }
       dists[i] = minD;
@@ -76,15 +77,27 @@ export interface KMeansResult {
   labels: Uint8Array;
 }
 
+export interface KMeansOptions {
+  useSampling?: boolean;
+  sampleLimit?: number;
+  maxIter?: number;
+  convergenceThreshold?: number;
+  lWeight?: number;
+}
+
 export function runKMeans(
   allPixels: Float32Array,
   totalPixels: number,
   k: number,
-  useSampling = false,
-  sampleLimit = 100_000,
-  maxIter = 10,
-  convergenceThreshold = 1.0
+  options: KMeansOptions = {}
 ): KMeansResult {
+  const {
+    useSampling = false,
+    sampleLimit = 100_000,
+    maxIter = 10,
+    convergenceThreshold = 1.0,
+    lWeight = 1,
+  } = options;
   const useSampledPixels = useSampling && totalPixels > sampleLimit;
   const step = useSampledPixels ? Math.max(1, Math.floor(totalPixels / sampleLimit)) : 1;
   const sampleCount = useSampledPixels ? Math.ceil(totalPixels / step) : totalPixels;
@@ -97,7 +110,7 @@ export function runKMeans(
   }
 
   const random = useSampledPixels ? Math.random : createSeededRandom(calcPixelSeed(sample, sampleCount));
-  let centers = kMeansPlusPlus(sample, sampleCount, k, random);
+  let centers = kMeansPlusPlus(sample, sampleCount, k, random, lWeight);
 
   for (let iter = 0; iter < maxIter; iter++) {
     // アサインメントステップ
@@ -108,7 +121,7 @@ export function runKMeans(
       let minD = Infinity;
       let label = 0;
       for (let j = 0; j < k; j++) {
-        const d = distSq(sample, i * 3, centers, j * 3);
+        const d = distSq(sample, i * 3, centers, j * 3, lWeight);
         if (d < minD) { minD = d; label = j; }
       }
       sums[label * 3] += sample[i * 3];
@@ -130,7 +143,7 @@ export function runKMeans(
         newCenters[j * 3 + 1] = centers[j * 3 + 1];
         newCenters[j * 3 + 2] = centers[j * 3 + 2];
       }
-      const change = distSq(newCenters, j * 3, centers, j * 3);
+      const change = distSq(newCenters, j * 3, centers, j * 3, lWeight);
       if (change > maxChange) maxChange = change;
     }
     centers = newCenters;
@@ -143,7 +156,7 @@ export function runKMeans(
     let minD = Infinity;
     let label = 0;
     for (let j = 0; j < k; j++) {
-      const d = distSq(allPixels, i * 3, centers, j * 3);
+      const d = distSq(allPixels, i * 3, centers, j * 3, lWeight);
       if (d < minD) { minD = d; label = j; }
     }
     labels[i] = label;

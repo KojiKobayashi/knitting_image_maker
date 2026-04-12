@@ -143,7 +143,7 @@ export function processImageAndGetBlob(
     pixelLabs,
     totalPixels,
     k,
-    settings.useSamplingForKMeans
+    { useSampling: settings.useSamplingForKMeans, lWeight: settings.labLWeight }
   );
   onProgress(0.6);
 

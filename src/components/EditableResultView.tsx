@@ -4,10 +4,18 @@ import { cellStartX, cellStartY, renderCellGridToBlob, renderCellGridWithNumbers
 
 // ─── CSV download helpers ─────────────────────────────────────────────────────
 
-/** Prefix values that start with formula-trigger characters to prevent CSV injection. */
+/**
+ * Sanitize a string value for safe inclusion in a CSV cell.
+ * - Values starting with formula-trigger characters (=, +, -, @, tab, CR) are prefixed with '
+ *   to prevent CSV injection when opened in spreadsheet applications.
+ * - Values containing commas, double-quotes, or newlines are wrapped in double-quotes
+ *   with internal double-quotes escaped by doubling (RFC 4180).
+ */
 function sanitizeCsvValue(value: string): string {
-  if (/^[=+\-@\t\r]/.test(value)) return `'${value}`;
-  return value;
+  let sanitized = value;
+  if (/^[=+\-@\t\r]/.test(sanitized)) sanitized = `'${sanitized}`;
+  if (/[",\n\r]/.test(sanitized)) sanitized = `"${sanitized.replace(/"/g, '""')}"`;
+  return sanitized;
 }
 
 function triggerCsvDownload(csv: string, filename: string): void {

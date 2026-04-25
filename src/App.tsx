@@ -140,7 +140,7 @@ export default function App() {
       {/* メインエリア（結果） */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6">
         {result ? (
-          <EditableResultView result={result} originalImageUrl={originalImageUrl} rect={processedRect} imageSize={processedImageSize} onBackToRectSelect={() => setResult(null)} />
+          <EditableResultView result={result} palette={palette} originalImageUrl={originalImageUrl} rect={processedRect} imageSize={processedImageSize} onBackToRectSelect={() => setResult(null)} />
         ) : originalImageUrl && uploadedImage && rect ? (
           <div className="mx-auto max-w-6xl space-y-4">
             <RectSelector

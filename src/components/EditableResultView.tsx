@@ -2,12 +2,23 @@ import { useState, useRef, useEffect, useCallback, useMemo, useReducer } from 'r
 import type { ProcessingResult, YarnColor, ColorCount, ImageRect, KnittingSettings } from '../types';
 import { cellStartX, cellStartY, renderCellGridToBlob, renderCellGridWithNumbersToBlob } from '../lib/imageProcessor';
 
-// ─── CSV download helper ───────────────────────────────────────────────────────
+// ─── CSV download helpers ─────────────────────────────────────────────────────
 
-function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): void {
-  const header = '系統,色番,セル数';
-  const rows = colorCounts.map((c) => `${c.type},${c.colorNumber},${c.count}`);
-  const csv = [header, ...rows].join('\n');
+/**
+ * Sanitize a string value for safe inclusion in a CSV cell.
+ * - Values starting with formula-trigger characters (=, +, -, @, tab, CR) are prefixed with '
+ *   to prevent CSV injection when opened in spreadsheet applications.
+ * - Values containing commas, double-quotes, or newlines are wrapped in double-quotes
+ *   with internal double-quotes escaped by doubling (RFC 4180).
+ */
+function sanitizeCsvValue(value: string): string {
+  let sanitized = value;
+  if (/^[=+\-@\t\r]/.test(sanitized)) sanitized = `'${sanitized}`;
+  if (/[",\n\r]/.test(sanitized)) sanitized = `"${sanitized.replace(/"/g, '""')}"`;
+  return sanitized;
+}
+
+function triggerCsvDownload(csv: string, filename: string): void {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -15,6 +26,21 @@ function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): vo
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): void {
+  const header = '系統,色番,セル数';
+  const rows = colorCounts.map(
+    (c) => `${sanitizeCsvValue(c.type)},${sanitizeCsvValue(c.colorNumber)},${c.count}`,
+  );
+  const csv = [header, ...rows].join('\n');
+  triggerCsvDownload(csv, filename);
+}
+
+function downloadColorNumberGridCsv(cellGrid: YarnColor[][], filename: string): void {
+  const rows = cellGrid.map((row) => row.map((c) => sanitizeCsvValue(c.colorNumber)).join(','));
+  const csv = rows.join('\n');
+  triggerCsvDownload(csv, filename);
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -213,6 +239,10 @@ export function EditableResultView({
     downloadColorCountsCsv(currentResult.colorCounts, 'knitting-colors.csv');
   }, [currentResult.colorCounts]);
 
+  const handleDownloadColorNumberGrid = useCallback(() => {
+    downloadColorNumberGridCsv(currentResult.cellGrid, 'knitting-color-numbers-grid.csv');
+  }, [currentResult.cellGrid]);
+
   if (isEditMode) {
     return (
       <EditMode
@@ -333,7 +363,13 @@ export function EditableResultView({
                 onClick={handleDownloadCsv}
                 className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
               >
-                📄 CSV ダウンロード
+                📄 使用色CSV
+              </button>
+              <button
+                onClick={handleDownloadColorNumberGrid}
+                className="inline-flex w-full justify-center rounded-lg bg-cyan-600 px-3 py-2 text-sm text-white transition-colors hover:bg-cyan-700 sm:w-auto"
+              >
+                🔢 色番グリッドCSV
               </button>
             </div>
           </div>
@@ -682,6 +718,10 @@ function EditMode({
     downloadColorCountsCsv(counts, 'knitting-colors.csv');
   }, []);
 
+  const handleDownloadColorNumberGridEdit = useCallback(() => {
+    downloadColorNumberGridCsv(currentDragGridRef.current, 'knitting-color-numbers-grid.csv');
+  }, []);
+
   // ── exit edit (re-render grid and pass updated result back) ────────────────
 
   const handleExitEdit = useCallback(async () => {
@@ -791,7 +831,13 @@ function EditMode({
           onClick={handleDownloadCsvEdit}
           className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 transition-colors"
         >
-          📄 CSV ダウンロード
+          📄 使用色CSV
+        </button>
+        <button
+          onClick={handleDownloadColorNumberGridEdit}
+          className="inline-flex items-center gap-1 rounded-lg bg-cyan-600 px-3 py-1.5 text-sm text-white hover:bg-cyan-700 transition-colors"
+        >
+          🔢 色番グリッドCSV
         </button>
         <button
           onClick={handleExitEdit}

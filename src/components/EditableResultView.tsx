@@ -2,12 +2,15 @@ import { useState, useRef, useEffect, useCallback, useMemo, useReducer } from 'r
 import type { ProcessingResult, YarnColor, ColorCount, ImageRect, KnittingSettings } from '../types';
 import { cellStartX, cellStartY, renderCellGridToBlob, renderCellGridWithNumbersToBlob } from '../lib/imageProcessor';
 
-// ─── CSV download helper ───────────────────────────────────────────────────────
+// ─── CSV download helpers ─────────────────────────────────────────────────────
 
-function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): void {
-  const header = '系統,色番,セル数';
-  const rows = colorCounts.map((c) => `${c.type},${c.colorNumber},${c.count}`);
-  const csv = [header, ...rows].join('\n');
+/** Prefix values that start with formula-trigger characters to prevent CSV injection. */
+function sanitizeCsvValue(value: string): string {
+  if (/^[=+\-@\t\r]/.test(value)) return `'${value}`;
+  return value;
+}
+
+function triggerCsvDownload(csv: string, filename: string): void {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -17,16 +20,19 @@ function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): vo
   URL.revokeObjectURL(url);
 }
 
+function downloadColorCountsCsv(colorCounts: ColorCount[], filename: string): void {
+  const header = '系統,色番,セル数';
+  const rows = colorCounts.map(
+    (c) => `${sanitizeCsvValue(c.type)},${sanitizeCsvValue(c.colorNumber)},${c.count}`,
+  );
+  const csv = [header, ...rows].join('\n');
+  triggerCsvDownload(csv, filename);
+}
+
 function downloadColorNumberGridCsv(cellGrid: YarnColor[][], filename: string): void {
-  const rows = cellGrid.map((row) => row.map((c) => c.colorNumber).join(','));
+  const rows = cellGrid.map((row) => row.map((c) => sanitizeCsvValue(c.colorNumber)).join(','));
   const csv = rows.join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  triggerCsvDownload(csv, filename);
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────

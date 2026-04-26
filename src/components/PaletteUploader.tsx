@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { loadPaletteFromFile } from '../lib/paletteLoader';
 import type { YarnColor } from '../types';
 
@@ -7,6 +8,7 @@ interface PaletteUploaderProps {
 }
 
 export function PaletteUploader({ onPaletteLoaded }: PaletteUploaderProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,20 +20,20 @@ export function PaletteUploader({ onPaletteLoaded }: PaletteUploaderProps) {
       setError(null);
       const palette = await loadPaletteFromFile(file);
       if (palette.length === 0) {
-        setError('有効な色データが見つかりませんでした。');
+        setError(t('palette.errorNoData'));
         return;
       }
       setFileName(file.name);
       onPaletteLoaded(palette);
     } catch {
-      setError('CSVの読み込みに失敗しました。');
+      setError(t('palette.errorLoad'));
     }
-  }, [onPaletteLoaded]);
+  }, [onPaletteLoaded, t]);
 
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        カラーパレット CSV（任意）
+        {t('palette.label')}
       </label>
       <div
         className="border border-gray-300 rounded-lg p-3 cursor-pointer hover:border-gray-400 transition-colors"
@@ -48,7 +50,7 @@ export function PaletteUploader({ onPaletteLoaded }: PaletteUploaderProps) {
           <p className="text-sm text-gray-700 truncate">{fileName}</p>
         ) : (
           <p className="text-sm text-gray-500">
-            未選択: Merino Rainbow 93色（デフォルト）を使用
+            {t('palette.default')}
           </p>
         )}
       </div>

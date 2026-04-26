@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ImageRect } from '../types';
 
 interface RectSelectorProps {
@@ -18,6 +19,7 @@ const MIN_SELECTION_SIZE = 2;
 const HANDLE_SIZE_PX = 12; // matches Tailwind w-3 h-3
 
 export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectChange }: RectSelectorProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<DragState | null>(null);
 
@@ -83,18 +85,18 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-semibold text-gray-800">元画像・範囲選択</h2>
+        <h2 className="text-lg font-semibold text-gray-800">{t('rectSelector.title')}</h2>
         {!isFullImage && (
           <button
             className="text-xs text-blue-600 hover:text-blue-800 underline"
             onClick={() => onRectChange({ x: 0, y: 0, width: imageWidth, height: imageHeight })}
           >
-            全体にリセット
+            {t('rectSelector.reset')}
           </button>
         )}
       </div>
       <p className="text-xs text-gray-500 mb-2">
-        画像上をドラッグして処理範囲を選択できます（デフォルト: 画像全体）
+        {t('rectSelector.hint')}
       </p>
       <div
         ref={containerRef}
@@ -107,7 +109,7 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
       >
         <img
           src={imageUrl}
-          alt="アップロードした元画像"
+          alt={t('rectSelector.imageAlt')}
           className="block max-w-full h-auto pointer-events-none"
           draggable={false}
         />
@@ -175,7 +177,7 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
       </div>
       {!isFullImage && (
         <p className="text-xs text-gray-500 mt-1">
-          選択範囲: ({Math.round(rect.x)}, {Math.round(rect.y)}) — {Math.round(rect.width)} × {Math.round(rect.height)} px
+          {t('rectSelector.range', { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) })}
         </p>
       )}
     </div>

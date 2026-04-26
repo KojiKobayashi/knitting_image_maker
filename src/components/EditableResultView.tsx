@@ -367,7 +367,7 @@ export function EditableResultView({
                 onClick={handleDownloadCsv}
                 className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
               >
-                {t('edit.downloadColorCsv')}
+                {t('result.downloadColorCsv')}
               </button>
               <button
                 onClick={handleDownloadColorNumberGrid}

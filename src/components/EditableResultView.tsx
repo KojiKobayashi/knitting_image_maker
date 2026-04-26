@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo, useReducer } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProcessingResult, YarnColor, ColorCount, ImageRect, KnittingSettings } from '../types';
 import { cellStartX, cellStartY, renderCellGridToBlob, renderCellGridWithNumbersToBlob } from '../lib/imageProcessor';
 
@@ -182,6 +183,7 @@ export function EditableResultView({
   imageSize,
   onBackToRectSelect,
 }: ResultViewProps) {
+  const { t } = useTranslation();
   const [isEditMode, setIsEditMode] = useState(false);
   // Local copy of result that gets updated when the user exits edit mode with changes
   const [currentResult, setCurrentResult] = useState<ProcessingResult>(result);
@@ -271,13 +273,13 @@ export function EditableResultView({
         {originalImageUrl && (
           <section className="min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold text-gray-800">元画像</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{t('result.original')}</h2>
             </div>
             <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
               <div className="relative" style={{ width: 'fit-content' }}>
                 <img
                   src={originalImageUrl}
-                  alt="アップロードした元画像"
+                  alt={t('result.originalAlt')}
                   className="block max-w-full h-auto"
                 />
                 {!isFullImage && (
@@ -323,8 +325,7 @@ export function EditableResultView({
             </div>
             {!isFullImage && rect && (
               <p className="text-xs text-gray-500 mt-1">
-                処理範囲: ({Math.round(rect.x)}, {Math.round(rect.y)}) —{' '}
-                {Math.round(rect.width)} × {Math.round(rect.height)} px
+                {t('result.range', { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) })}
               </p>
             )}
           </section>
@@ -332,54 +333,54 @@ export function EditableResultView({
 
         <section className="min-w-0">
           <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">生成結果</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{t('result.title')}</h2>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               {onBackToRectSelect && (
                 <button
                   onClick={onBackToRectSelect}
                   className="inline-flex w-full justify-center rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300 sm:w-auto"
                 >
-                  矩形選択に戻る
+                  {t('result.back')}
                 </button>
               )}
               <button
                 onClick={() => setIsEditMode(true)}
                 className="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white transition-colors hover:bg-indigo-700 sm:w-auto"
               >
-                ✏️ 編集モード
+                {t('edit.title')}
               </button>
               <a
                 href={currentResult.pixelImageDataUrl}
                 download="knitting-pattern.png"
                 className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
               >
-                PNG ダウンロード
+                {t('result.download')}
               </a>
               <button
                 onClick={handleDownloadNumberedPng}
                 disabled={isDownloadingNumbered}
                 className="inline-flex w-full justify-center rounded-lg bg-teal-600 px-3 py-2 text-sm text-white transition-colors hover:bg-teal-700 disabled:opacity-60 sm:w-auto"
               >
-                {isDownloadingNumbered ? '⏳ 生成中…' : '🔢 番号付き PNG'}
+                {isDownloadingNumbered ? t('edit.generating') : t('result.downloadNumbered')}
               </button>
               <button
                 onClick={handleDownloadCsv}
                 className="inline-flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
               >
-                📄 使用色CSV
+                {t('edit.downloadColorCsv')}
               </button>
               <button
                 onClick={handleDownloadColorNumberGrid}
                 className="inline-flex w-full justify-center rounded-lg bg-cyan-600 px-3 py-2 text-sm text-white transition-colors hover:bg-cyan-700 sm:w-auto"
               >
-                🔢 色番グリッドCSV
+                {t('result.downloadGridCsv')}
               </button>
             </div>
           </div>
           <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
             <img
               src={currentResult.pixelImageDataUrl}
-              alt="編み図"
+              alt={t('result.diagramAlt')}
               className="block max-w-full h-auto"
             />
           </div>
@@ -404,22 +405,23 @@ function ColorCountTable({
   onColorClick?: (color: YarnColor) => void;
   onReplaceAll?: (color: YarnColor) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div>
       <h3 className="text-md font-semibold text-gray-800 mb-2">
-        使用色一覧 ({colorCounts.length}色)
+        {t('result.colorListTitle', { count: colorCounts.length })}
       </h3>
       <div className="overflow-auto max-h-64 border border-gray-200 rounded-lg">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 sticky top-0">
             <tr>
-              <th className="px-3 py-2 text-left text-gray-600">プレビュー</th>
-              <th className="px-3 py-2 text-left text-gray-600">系統</th>
-              <th className="px-3 py-2 text-left text-gray-600">色番</th>
-              <th className="px-3 py-2 text-right text-gray-600">セル数</th>
-              <th className="px-3 py-2 text-left text-gray-600">商品</th>
+              <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.preview')}</th>
+              <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.type')}</th>
+              <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.colorNumber')}</th>
+              <th className="px-3 py-2 text-right text-gray-600">{t('result.tableHeader.count')}</th>
+              <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.product')}</th>
               {onReplaceAll && (
-                <th className="px-3 py-2 text-left text-gray-600">操作</th>
+                <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.action')}</th>
               )}
             </tr>
           </thead>
@@ -440,7 +442,7 @@ function ColorCountTable({
                       }}
                     />
                   </td>
-                  <td className="px-3 py-2 text-gray-700">{color.type}</td>
+                  <td className="px-3 py-2 text-gray-700">{t(`palette.type.${color.type}`, color.type)}</td>
                   <td className="px-3 py-2 text-gray-700">{color.colorNumber}</td>
                   <td className="px-3 py-2 text-right text-gray-700">
                     {color.count.toLocaleString()}
@@ -463,14 +465,14 @@ function ColorCountTable({
                   {onReplaceAll && (
                     <td className="px-3 py-2">
                       <button
-                        title="選択色でこの色をすべて置換"
+                        title={t('edit.replaceAll')}
                         onClick={(e) => {
                           e.stopPropagation();
                           onReplaceAll(color);
                         }}
                         className="rounded px-2 py-1 text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
                       >
-                        全置換
+                        {t('edit.replaceAll')}
                       </button>
                     </td>
                   )}
@@ -495,6 +497,7 @@ function EditMode({
   palette: YarnColor[];
   onExitEdit: (updated: ProcessingResult) => void;
 }) {
+  const { t } = useTranslation();
   const { cellCols, cellRows, settings } = result;
 
   // History state via useReducer for atomic updates
@@ -764,63 +767,63 @@ function EditMode({
     <div className="mx-auto max-w-full space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mr-2">✏️ 編集モード</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mr-2">{t('edit.title')}</h2>
 
         <button
           onClick={() => dispatch({ type: 'UNDO' })}
           disabled={!canUndo}
-          title="元に戻す (Ctrl+Z)"
+          title={t('edit.undoTooltip')}
           className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          ↩ Undo
+          {t('edit.undo')}
         </button>
         <button
           onClick={() => dispatch({ type: 'REDO' })}
           disabled={!canRedo}
-          title="やり直す (Ctrl+Y)"
+          title={t('edit.redoTooltip')}
           className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          ↪ Redo
+          {t('edit.redo')}
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
         <button
           onClick={() => setTool('paint')}
-          title="ペイントツール"
+          title={t('edit.paintTooltip')}
           className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             tool === 'paint'
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          🖌️ ペイント
+          {t('edit.paint')}
         </button>
         <button
           onClick={() => setTool('eyedropper')}
-          title="スポイトツール (E キー)"
+          title={t('edit.eyedropperTooltip')}
           className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             tool === 'eyedropper'
               ? 'bg-amber-500 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          💧 スポイト
+          {t('edit.eyedropper')}
         </button>
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">選択色:</span>
+          <span className="text-xs text-gray-500">{t('edit.selectedColor')}</span>
           <div
             className="w-7 h-7 rounded-md border-2 border-gray-400 shadow-sm flex-shrink-0"
             style={{
               backgroundColor: `rgb(${selectedColor.rgb[0]},${selectedColor.rgb[1]},${selectedColor.rgb[2]})`,
             }}
-            title={`${selectedColor.type} ${selectedColor.colorNumber}`}
+            title={`${t(`palette.type.${selectedColor.type}`, selectedColor.type)} ${selectedColor.colorNumber}`}
           />
           <span className="text-xs text-gray-600 max-w-[120px] truncate">
-            {selectedColor.type} {selectedColor.colorNumber}
+            {t(`palette.type.${selectedColor.type}`, selectedColor.type)} {selectedColor.colorNumber}
           </span>
         </div>
 
@@ -831,38 +834,38 @@ function EditMode({
           disabled={isDownloading}
           className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700 disabled:opacity-60 transition-colors"
         >
-          {isDownloading ? '⏳ 生成中…' : '⬇ PNG ダウンロード'}
+          {isDownloading ? t('edit.generating') : t('result.download')}
         </button>
         <button
           onClick={handleDownloadNumbered}
           disabled={isDownloadingNumbered}
           className="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-1.5 text-sm text-white hover:bg-teal-700 disabled:opacity-60 transition-colors"
         >
-          {isDownloadingNumbered ? '⏳ 生成中…' : '🔢 番号付き PNG'}
+          {isDownloadingNumbered ? t('edit.generating') : t('result.downloadNumbered')}
         </button>
         <button
           onClick={handleDownloadCsvEdit}
           className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 transition-colors"
         >
-          📄 使用色CSV
+          {t('result.downloadColorCsv')}
         </button>
         <button
           onClick={handleDownloadColorNumberGridEdit}
           className="inline-flex items-center gap-1 rounded-lg bg-cyan-600 px-3 py-1.5 text-sm text-white hover:bg-cyan-700 transition-colors"
         >
-          🔢 色番グリッドCSV
+          {t('result.downloadGridCsv')}
         </button>
         <button
           onClick={handleExitEdit}
           disabled={isExiting}
           className="inline-flex items-center gap-1 rounded-lg bg-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-60 transition-colors"
         >
-          {isExiting ? '⏳ 反映中…' : '✓ 編集終了'}
+          {isExiting ? t('edit.applying') : t('edit.exit')}
         </button>
       </div>
 
       <p className="text-xs text-gray-400 pl-1">
-        ヒント: Ctrl+Z で元に戻す / Ctrl+Y でやり直す / E キーでスポイト切替 / ドラッグで連続塗り
+        {t('edit.hint')}
       </p>
 
       <div className="flex gap-4 items-start">
@@ -891,7 +894,7 @@ function EditMode({
         <div className="w-72 flex-shrink-0">
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
             {/* Tabs */}
-            <div role="tablist" aria-label="カラーパネル" className="flex border-b border-gray-200">
+            <div role="tablist" aria-label={t('edit.colorPanelLabel')} className="flex border-b border-gray-200">
               <button
                 role="tab"
                 id="tab-used"
@@ -912,7 +915,7 @@ function EditMode({
                   }
                 }}
               >
-                使用中 ({colorCounts.length}色)
+                {t('edit.usedColorsTab', { count: colorCounts.length })}
               </button>
               <button
                 role="tab"
@@ -934,7 +937,7 @@ function EditMode({
                   }
                 }}
               >
-                全色 ({palette.length}色)
+                {t('edit.allColorsTab', { count: palette.length })}
               </button>
             </div>
 
@@ -945,7 +948,7 @@ function EditMode({
               hidden={colorPanelTab !== 'used'}
             >
               <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
-                <p className="text-xs text-gray-400">クリックで塗る色を選択 / 全置換で一括変換</p>
+                <p className="text-xs text-gray-400">{t('edit.usedColorsHint')}</p>
               </div>
               <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 360px)' }}>
                 <table className="w-full text-sm">
@@ -976,7 +979,7 @@ function EditMode({
                           </td>
                           <td className="pr-3 py-2 text-right">
                             <button
-                              title={`この色をすべて「${selectedColor.type} ${selectedColor.colorNumber}」で置換`}
+                              title={t('edit.replaceAllTooltip', { type: t(`palette.type.${selectedColor.type}`, selectedColor.type), number: selectedColor.colorNumber })}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleReplaceAll(color);
@@ -984,7 +987,7 @@ function EditMode({
                               disabled={isSelected}
                               className="rounded px-2 py-0.5 text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
-                              全置換
+                              {t('edit.replaceAll')}
                             </button>
                           </td>
                         </tr>
@@ -1004,7 +1007,7 @@ function EditMode({
               <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
                 <input
                   type="text"
-                  placeholder="色番・系統で絞り込み…"
+                  placeholder={t('edit.allColorsSearch')}
                   value={allColorsSearch}
                   onChange={(e) => setAllColorsSearch(e.target.value)}
                   className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -1046,13 +1049,13 @@ function EditMode({
                               </td>
                               <td className="px-2 py-2 text-gray-700 text-xs">
                                 <div className="font-medium">{color.colorNumber}</div>
-                                <div className="text-gray-400">{color.type}</div>
+                                <div className="text-gray-400">{t(`palette.type.${color.type}`, color.type)}</div>
                               </td>
                               <td className="pr-3 py-2 text-right">
                                 {isUsed ? (
-                                  <span className="text-xs text-indigo-400 font-medium">使用中</span>
+                                  <span className="text-xs text-indigo-400 font-medium">{t('edit.status.used')}</span>
                                 ) : (
-                                  <span className="text-xs text-gray-300">未使用</span>
+                                  <span className="text-xs text-gray-300">{t('edit.status.unused')}</span>
                                 )}
                               </td>
                             </tr>

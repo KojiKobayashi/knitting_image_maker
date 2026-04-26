@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface ProcessButtonProps {
   disabled: boolean;
   isProcessing: boolean;
@@ -6,6 +8,7 @@ interface ProcessButtonProps {
 }
 
 export function ProcessButton({ disabled, isProcessing, progress, onClick }: ProcessButtonProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
       <button
@@ -17,7 +20,7 @@ export function ProcessButton({ disabled, isProcessing, progress, onClick }: Pro
             : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
         }`}
       >
-        {isProcessing ? '処理中...' : '編み図を生成'}
+        {isProcessing ? t('button.processing') : t('button.generate')}
       </button>
 
       {isProcessing && (

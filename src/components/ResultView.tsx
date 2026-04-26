@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { ProcessingResult, ImageRect } from '../types';
 
 function getAmazonProductUrl(asin: string): string {
@@ -13,6 +14,7 @@ interface ResultViewProps {
 }
 
 export function ResultView({ result, originalImageUrl, rect, imageSize, onBackToRectSelect }: ResultViewProps) {
+  const { t } = useTranslation();
   const { pixelImageDataUrl, colorCounts } = result;
 
   const isFullImage = !rect || !imageSize ||
@@ -30,13 +32,13 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
         {originalImageUrl && (
           <section className="min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold text-gray-800">元画像</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{t('result.original')}</h2>
             </div>
             <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
               <div className="relative" style={{ width: 'fit-content' }}>
               <img
                 src={originalImageUrl}
-                alt="アップロードした元画像"
+                alt={t('result.originalAlt')}
                 className="block max-w-full h-auto"
               />
               {/* Rect overlay: only when a sub-region was selected */}
@@ -88,7 +90,7 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
             </div>
             {!isFullImage && rect && (
               <p className="text-xs text-gray-500 mt-1">
-                処理範囲: ({Math.round(rect.x)}, {Math.round(rect.y)}) — {Math.round(rect.width)} × {Math.round(rect.height)} px
+                {t('result.range', { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) })}
               </p>
             )}
           </section>
@@ -96,14 +98,14 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
 
         <section className="min-w-0">
           <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">生成結果</h2>
+            <h2 className="text-lg font-semibold text-gray-800">{t('result.title')}</h2>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               {onBackToRectSelect && (
                 <button
                   onClick={onBackToRectSelect}
                   className="inline-flex w-full justify-center rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-300 sm:w-auto"
                 >
-                  矩形選択に戻る
+                  {t('result.back')}
                 </button>
               )}
               <a
@@ -111,14 +113,14 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
                 download="knitting-pattern.png"
                 className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 sm:w-auto"
               >
-                PNG ダウンロード
+                {t('result.download')}
               </a>
             </div>
           </div>
           <div className="border border-gray-200 rounded-lg overflow-auto max-h-[65vh] bg-white shadow-sm">
             <img
               src={pixelImageDataUrl}
-              alt="編み図"
+              alt={t('result.diagramAlt')}
               className="block max-w-full h-auto"
             />
           </div>
@@ -127,17 +129,17 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
 
       <div>
         <h3 className="text-md font-semibold text-gray-800 mb-2">
-          使用色一覧 ({colorCounts.length}色)
+          {t('result.colorListTitle', { count: colorCounts.length })}
         </h3>
         <div className="overflow-auto max-h-64 border border-gray-200 rounded-lg">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0">
               <tr>
-                <th className="px-3 py-2 text-left text-gray-600">プレビュー</th>
-                <th className="px-3 py-2 text-left text-gray-600">系統</th>
-                <th className="px-3 py-2 text-left text-gray-600">色番</th>
-                <th className="px-3 py-2 text-right text-gray-600">セル数</th>
-                <th className="px-3 py-2 text-left text-gray-600">商品</th>
+                <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.preview')}</th>
+                <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.type')}</th>
+                <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.colorNumber')}</th>
+                <th className="px-3 py-2 text-right text-gray-600">{t('result.tableHeader.count')}</th>
+                <th className="px-3 py-2 text-left text-gray-600">{t('result.tableHeader.product')}</th>
               </tr>
             </thead>
             <tbody>
@@ -151,7 +153,7 @@ export function ResultView({ result, originalImageUrl, rect, imageSize, onBackTo
                       }}
                     />
                   </td>
-                  <td className="px-3 py-2 text-gray-700">{color.type}</td>
+                  <td className="px-3 py-2 text-gray-700">{t(`palette.type.${color.type}`, color.type)}</td>
                   <td className="px-3 py-2 text-gray-700">{color.colorNumber}</td>
                   <td className="px-3 py-2 text-right text-gray-700">{color.count.toLocaleString()}</td>
                   <td className="px-3 py-2 text-gray-700">

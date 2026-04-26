@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { KnittingSettings, ProcessingResult, WorkerResponse, YarnColor, ImageRect } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { PaletteUploader } from './components/PaletteUploader';
@@ -22,6 +23,7 @@ const DEFAULT_SETTINGS: KnittingSettings = {
 };
 
 export default function App() {
+  const { t, i18n } = useTranslation();
   const [uploadedImage, setUploadedImage] = useState<ImageData | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [palette, setPalette] = useState<YarnColor[]>(DEFAULT_PALETTE);
@@ -90,35 +92,44 @@ export default function App() {
         setProgress(1);
         worker.terminate();
       } else if (type === 'error') {
-        setError(err ?? '不明なエラーが発生しました。');
+        setError(err ?? t('app.error'));
         setIsProcessing(false);
         worker.terminate();
       }
     };
 
     worker.onerror = (e) => {
-      setError(`Worker エラー: ${e.message}`);
+      setError(`${t('app.workerError')}${e.message}`);
       setIsProcessing(false);
       worker.terminate();
     };
 
     worker.postMessage({ imageData: uploadedImage, palette, settings, rect: rect ?? undefined });
-  }, [uploadedImage, palette, settings, rect]);
+  }, [uploadedImage, palette, settings, rect, t]);
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* 左サイドバー（設定） */}
       <aside className="w-72 bg-white shadow-md flex flex-col overflow-y-auto">
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-bold text-gray-800">編み図生成</h1>
-          <p className="text-xs text-gray-500 mt-1">画像から編み目パターンを生成</p>
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-gray-800">{t('app.title')}</h1>
+            <p className="text-xs text-gray-500 mt-1">{t('app.subtitle')}</p>
+          </div>
+          <button
+            onClick={() => i18n.changeLanguage((i18n.resolvedLanguage ?? i18n.language).startsWith('ja') ? 'en' : 'ja')}
+            className="ml-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold"
+            title={(i18n.resolvedLanguage ?? i18n.language).startsWith('ja') ? 'Switch to English' : '日本語に切り替え'}
+          >
+            {t('language.toggle')}
+          </button>
         </div>
 
         <div className="p-4 space-y-5 flex-1">
           <ImageUploader onImageLoaded={handleImageLoaded} />
           <PaletteUploader onPaletteLoaded={setPalette} />
           <div>
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">変換設定</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('app.settings')}</h2>
             <SettingsPanel settings={settings} onChange={setSettings} />
           </div>
           <ImageInfoPanel settings={settings} rect={rect} uploadedImage={uploadedImage} />
@@ -155,7 +166,7 @@ export default function App() {
           <div className="flex items-center justify-center h-full text-gray-400">
             <div className="text-center">
               <div className="text-6xl mb-4">🧶</div>
-              <p className="text-lg">画像をアップロードして「編み図を生成」ボタンを押してください</p>
+              <p className="text-lg">{t('app.placeholder')}</p>
             </div>
           </div>
         )}

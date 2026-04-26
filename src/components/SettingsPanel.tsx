@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { KnittingSettings } from '../types';
 
 interface SettingsPanelProps {
@@ -7,6 +8,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
+  const { t } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const update = <K extends keyof KnittingSettings>(key: K, value: KnittingSettings[K]) => {
@@ -32,7 +34,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          色数: {settings.colorCount}
+          {t('settings.colorCount', { count: settings.colorCount })}
         </label>
         <input
           type="range"
@@ -49,7 +51,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          横セル数: {settings.horizontalCells}
+          {t('settings.horizontalCells', { count: settings.horizontalCells })}
         </label>
         <input
           type="range"
@@ -73,7 +75,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
           className="w-4 h-4"
         />
         <label htmlFor="denoise" className="text-sm font-medium text-gray-700">
-          ノイズ除去
+          {t('settings.denoise')}
         </label>
       </div>
 
@@ -83,7 +85,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
           onClick={() => setShowAdvanced((prev) => !prev)}
           className="text-sm font-medium text-gray-700 hover:text-gray-900"
         >
-          {showAdvanced ? '詳細設定を隠す' : '詳細設定を表示'}
+          {showAdvanced ? t('settings.advancedHide') : t('settings.advancedShow')}
         </button>
 
         {showAdvanced && (
@@ -91,7 +93,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  セル高さ: {settings.cellHeight}px
+                  {t('settings.cellHeight', { value: settings.cellHeight })}
                 </label>
                 <input
                   type="range"
@@ -105,7 +107,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  セル幅: {settings.cellWidth}px
+                  {t('settings.cellWidth', { value: settings.cellWidth })}
                 </label>
                 <input
                   type="range"
@@ -119,7 +121,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  通常グリッド線: {settings.lineThickness}px
+                  {t('settings.lineThickness', { value: settings.lineThickness })}
                 </label>
                 <input
                   type="range"
@@ -133,7 +135,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  太グリッド線: {settings.thickLineThickness}px
+                  {t('settings.thickLineThickness', { value: settings.thickLineThickness })}
                 </label>
                 <input
                   type="range"
@@ -147,7 +149,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  太線間隔: {settings.thickLineInterval}
+                  {t('settings.thickLineInterval', { value: settings.thickLineInterval })}
                 </label>
                 <input
                   type="range"

@@ -161,6 +161,7 @@ type Tool = 'paint' | 'eyedropper';
 
 interface ResultViewProps {
   result: ProcessingResult;
+  palette?: YarnColor[];
   originalImageUrl?: string | null;
   rect?: ImageRect | null;
   imageSize?: { width: number; height: number } | null;
@@ -175,6 +176,7 @@ function getAmazonProductUrl(asin: string): string {
 
 export function EditableResultView({
   result,
+  palette,
   originalImageUrl,
   rect,
   imageSize,
@@ -247,6 +249,7 @@ export function EditableResultView({
     return (
       <EditMode
         result={currentResult}
+        palette={palette ?? []}
         onExitEdit={(updated) => {
           // Revoke previous edited blob URL (if any) before replacing
           if (editedBlobUrlRef.current) {
@@ -485,9 +488,11 @@ function ColorCountTable({
 
 function EditMode({
   result,
+  palette,
   onExitEdit,
 }: {
   result: ProcessingResult;
+  palette: YarnColor[];
   onExitEdit: (updated: ProcessingResult) => void;
 }) {
   const { cellCols, cellRows, settings } = result;
@@ -506,6 +511,8 @@ function EditMode({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloadingNumbered, setIsDownloadingNumbered] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [colorPanelTab, setColorPanelTab] = useState<'used' | 'all'>('used');
+  const [allColorsSearch, setAllColorsSearch] = useState('');
 
   // Refs for drag painting (no React state updates mid-drag)
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -523,6 +530,12 @@ function EditMode({
 
   // Derived color counts from current grid
   const colorCounts = useMemo(() => calcColorCounts(cellGrid), [cellGrid]);
+
+  // Precompute a Set of used color keys for O(1) lookup in the "all colors" tab
+  const usedColorKeySet = useMemo(
+    () => new Set(colorCounts.map((cc) => colorKey(cc))),
+    [colorCounts],
+  );
 
   // ── keyboard shortcuts ──────────────────────────────────────────────────────
 
@@ -877,55 +890,178 @@ function EditMode({
         {/* Color palette side panel */}
         <div className="w-72 flex-shrink-0">
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-              <p className="text-sm font-semibold text-gray-700">使用色 ({colorCounts.length}色)</p>
-              <p className="text-xs text-gray-400 mt-0.5">クリックで塗る色を選択 / 全置換で一括変換</p>
+            {/* Tabs */}
+            <div role="tablist" aria-label="カラーパネル" className="flex border-b border-gray-200">
+              <button
+                role="tab"
+                id="tab-used"
+                aria-selected={colorPanelTab === 'used'}
+                aria-controls="panel-used"
+                tabIndex={colorPanelTab === 'used' ? 0 : -1}
+                className={`flex-1 px-3 py-2 text-xs font-semibold transition-colors ${
+                  colorPanelTab === 'used'
+                    ? 'bg-white text-indigo-700 border-b-2 border-indigo-600'
+                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                }`}
+                onClick={() => setColorPanelTab('used')}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    setColorPanelTab('all');
+                    document.getElementById('tab-all')?.focus();
+                  }
+                }}
+              >
+                使用中 ({colorCounts.length}色)
+              </button>
+              <button
+                role="tab"
+                id="tab-all"
+                aria-selected={colorPanelTab === 'all'}
+                aria-controls="panel-all"
+                tabIndex={colorPanelTab === 'all' ? 0 : -1}
+                className={`flex-1 px-3 py-2 text-xs font-semibold transition-colors ${
+                  colorPanelTab === 'all'
+                    ? 'bg-white text-indigo-700 border-b-2 border-indigo-600'
+                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                }`}
+                onClick={() => setColorPanelTab('all')}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    setColorPanelTab('used');
+                    document.getElementById('tab-used')?.focus();
+                  }
+                }}
+              >
+                全色 ({palette.length}色)
+              </button>
             </div>
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 340px)' }}>
-              <table className="w-full text-sm">
-                <tbody>
-                  {colorCounts.map((color, i) => {
-                    const isSelected = colorsEqual(color, selectedColor);
-                    return (
-                      <tr
-                        key={i}
-                        className={`border-t border-gray-100 cursor-pointer transition-colors ${
-                          isSelected ? 'bg-indigo-100' : 'hover:bg-gray-50'
-                        }`}
-                        onClick={() => setSelectedColor(color)}
-                      >
-                        <td className="pl-3 py-2">
-                          <div
-                            className={`w-6 h-6 rounded border-2 transition-transform ${
-                              isSelected ? 'border-indigo-500 scale-110' : 'border-gray-200'
-                            }`}
-                            style={{
-                              backgroundColor: `rgb(${color.rgb[0]},${color.rgb[1]},${color.rgb[2]})`,
-                            }}
-                          />
-                        </td>
-                        <td className="px-2 py-2 text-gray-700 text-xs">
-                          <span className="font-medium">{color.colorNumber}</span>
-                          <span className="text-gray-400 ml-1">({color.count.toLocaleString()})</span>
-                        </td>
-                        <td className="pr-3 py-2 text-right">
-                          <button
-                            title={`この色をすべて「${selectedColor.type} ${selectedColor.colorNumber}」で置換`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReplaceAll(color);
-                            }}
-                            disabled={isSelected}
-                            className="rounded px-2 py-0.5 text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                          >
-                            全置換
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+
+            <div
+              role="tabpanel"
+              id="panel-used"
+              aria-labelledby="tab-used"
+              hidden={colorPanelTab !== 'used'}
+            >
+              <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
+                <p className="text-xs text-gray-400">クリックで塗る色を選択 / 全置換で一括変換</p>
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 360px)' }}>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {colorCounts.map((color) => {
+                      const isSelected = colorsEqual(color, selectedColor);
+                      return (
+                        <tr
+                          key={colorKey(color)}
+                          className={`border-t border-gray-100 cursor-pointer transition-colors ${
+                            isSelected ? 'bg-indigo-100' : 'hover:bg-gray-50'
+                          }`}
+                          onClick={() => setSelectedColor(color)}
+                        >
+                          <td className="pl-3 py-2">
+                            <div
+                              className={`w-6 h-6 rounded border-2 transition-transform ${
+                                isSelected ? 'border-indigo-500 scale-110' : 'border-gray-200'
+                              }`}
+                              style={{
+                                backgroundColor: `rgb(${color.rgb[0]},${color.rgb[1]},${color.rgb[2]})`,
+                              }}
+                            />
+                          </td>
+                          <td className="px-2 py-2 text-gray-700 text-xs">
+                            <span className="font-medium">{color.colorNumber}</span>
+                            <span className="text-gray-400 ml-1">({color.count.toLocaleString()})</span>
+                          </td>
+                          <td className="pr-3 py-2 text-right">
+                            <button
+                              title={`この色をすべて「${selectedColor.type} ${selectedColor.colorNumber}」で置換`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReplaceAll(color);
+                              }}
+                              disabled={isSelected}
+                              className="rounded px-2 py-0.5 text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              全置換
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div
+              role="tabpanel"
+              id="panel-all"
+              aria-labelledby="tab-all"
+              hidden={colorPanelTab !== 'all'}
+            >
+              <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
+                <input
+                  type="text"
+                  placeholder="色番・系統で絞り込み…"
+                  value={allColorsSearch}
+                  onChange={(e) => setAllColorsSearch(e.target.value)}
+                  className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 360px)' }}>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {(() => {
+                      const q = allColorsSearch.trim().toLowerCase();
+                      return palette
+                        .filter((c) => {
+                          if (!q) return true;
+                          return (
+                            c.colorNumber.toLowerCase().includes(q) ||
+                            c.type.toLowerCase().includes(q)
+                          );
+                        })
+                        .map((color) => {
+                          const isSelected = colorsEqual(color, selectedColor);
+                          const isUsed = usedColorKeySet.has(colorKey(color));
+                          return (
+                            <tr
+                              key={colorKey(color)}
+                              className={`border-t border-gray-100 cursor-pointer transition-colors ${
+                                isSelected ? 'bg-indigo-100' : 'hover:bg-gray-50'
+                              }`}
+                              onClick={() => setSelectedColor(color)}
+                            >
+                              <td className="pl-3 py-2">
+                                <div
+                                  className={`w-6 h-6 rounded border-2 transition-transform ${
+                                    isSelected ? 'border-indigo-500 scale-110' : 'border-gray-200'
+                                  }`}
+                                  style={{
+                                    backgroundColor: `rgb(${color.rgb[0]},${color.rgb[1]},${color.rgb[2]})`,
+                                  }}
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-gray-700 text-xs">
+                                <div className="font-medium">{color.colorNumber}</div>
+                                <div className="text-gray-400">{color.type}</div>
+                              </td>
+                              <td className="pr-3 py-2 text-right">
+                                {isUsed ? (
+                                  <span className="text-xs text-indigo-400 font-medium">使用中</span>
+                                ) : (
+                                  <span className="text-xs text-gray-300">未使用</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

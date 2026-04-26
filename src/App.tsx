@@ -119,7 +119,8 @@ export default function App() {
           <button
             onClick={() => i18n.changeLanguage((i18n.resolvedLanguage ?? i18n.language).startsWith('ja') ? 'en' : 'ja')}
             className="ml-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold"
-            title={(i18n.resolvedLanguage ?? i18n.language).startsWith('ja') ? 'Switch to English' : '日本語に切り替え'}
+            title={t('language.titleTooltip')}
+            aria-label={t('language.titleTooltip')}
           >
             {t('language.toggle')}
           </button>

@@ -117,6 +117,7 @@ const resources = {
 
       // Language selector
       'language.toggle': 'EN',
+      'language.titleTooltip': 'Switch to English',
     },
   },
   en: {
@@ -233,6 +234,7 @@ const resources = {
 
       // Language selector
       'language.toggle': '日',
+      'language.titleTooltip': '日本語に切り替え',
     },
   },
 };

@@ -105,7 +105,7 @@ export default function App() {
     };
 
     worker.postMessage({ imageData: uploadedImage, palette, settings, rect: rect ?? undefined });
-  }, [uploadedImage, palette, settings, rect]);
+  }, [uploadedImage, palette, settings, rect, t]);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -117,9 +117,9 @@ export default function App() {
             <p className="text-xs text-gray-500 mt-1">{t('app.subtitle')}</p>
           </div>
           <button
-            onClick={() => i18n.changeLanguage(i18n.language === 'ja' ? 'en' : 'ja')}
+            onClick={() => i18n.changeLanguage((i18n.resolvedLanguage ?? i18n.language).startsWith('ja') ? 'en' : 'ja')}
             className="ml-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold"
-            title={i18n.language === 'ja' ? 'Switch to English' : '日本語に切り替え'}
+            title={(i18n.resolvedLanguage ?? i18n.language).startsWith('ja') ? 'Switch to English' : '日本語に切り替え'}
           >
             {t('language.toggle')}
           </button>

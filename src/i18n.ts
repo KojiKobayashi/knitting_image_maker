@@ -141,7 +141,7 @@ const resources = {
 
       // PaletteUploader.tsx
       'palette.label': 'Color Palette CSV (Optional)',
-      'palette.default': 'Not selected: Using Merino Rainbow (93 colors, default)',
+      'palette.default': 'Not selected: Using Merino Rainbow (96 colors, default)',
       'palette.errorNoData': 'No valid color data found.',
       'palette.errorLoad': 'Failed to load CSV.',
 

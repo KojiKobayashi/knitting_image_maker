@@ -27,7 +27,7 @@ export function ImageUploader({ onImageLoaded }: ImageUploaderProps) {
     const imageData = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
     onImageLoaded(imageData, previewUrl);
     bitmap.close();
-  }, [onImageLoaded]);
+  }, [onImageLoaded, t]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

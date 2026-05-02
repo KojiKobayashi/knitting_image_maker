@@ -40,7 +40,7 @@ const resources = {
       'settings.lineThickness': '通常グリッド線: {{value}}px',
       'settings.thickLineThickness': '太グリッド線: {{value}}px',
       'settings.thickLineInterval': '太線間隔: {{value}}',
-      'settings.sampling': 'K-means でサンプリング画素を使う',
+      'settings.sampling': '生成するたびに結果を変化させる（ランダム）',
 
       // ImageInfoPanel.tsx
       'info.title': '出力画像情報',
@@ -157,7 +157,7 @@ const resources = {
       'settings.lineThickness': 'Normal Grid Line: {{value}}px',
       'settings.thickLineThickness': 'Thick Grid Line: {{value}}px',
       'settings.thickLineInterval': 'Thick Line Interval: {{value}}',
-      'settings.sampling': 'Use K-means sampling',
+      'settings.sampling': 'Vary results each time (random)',
 
       // ImageInfoPanel.tsx
       'info.title': 'Output Image Info',

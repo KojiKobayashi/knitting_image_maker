@@ -79,6 +79,19 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
         </label>
       </div>
 
+      <div className="flex items-center gap-2">
+        <input
+          id="useSamplingForKMeans"
+          type="checkbox"
+          checked={settings.useSamplingForKMeans}
+          onChange={(e) => update('useSamplingForKMeans', e.target.checked)}
+          className="w-4 h-4"
+        />
+        <label htmlFor="useSamplingForKMeans" className="text-sm font-medium text-gray-700">
+          {t('settings.sampling')}
+        </label>
+      </div>
+
       <div>
         <button
           type="button"
@@ -160,19 +173,6 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
                   className="w-full"
                 />
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                id="useSamplingForKMeans"
-                type="checkbox"
-                checked={settings.useSamplingForKMeans}
-                onChange={(e) => update('useSamplingForKMeans', e.target.checked)}
-                className="w-4 h-4"
-              />
-              <label htmlFor="useSamplingForKMeans" className="text-sm font-medium text-gray-700">
-                K-means でサンプリング画素を使う
-              </label>
             </div>
           </div>
         )}

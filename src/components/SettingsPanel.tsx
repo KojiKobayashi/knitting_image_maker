@@ -7,12 +7,33 @@ interface SettingsPanelProps {
   onChange: (settings: KnittingSettings) => void;
 }
 
+function computeCellHeight(cellWidth: number, gaugeStitches: number, gaugeRows: number): number {
+  return Math.max(1, Math.round(cellWidth * gaugeStitches / gaugeRows));
+}
+
 export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
   const { t } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const update = <K extends keyof KnittingSettings>(key: K, value: KnittingSettings[K]) => {
     onChange({ ...settings, [key]: value });
+  };
+
+  const updateGauge = (gaugeStitches: number, gaugeRows: number) => {
+    onChange({
+      ...settings,
+      gaugeStitches,
+      gaugeRows,
+      cellHeight: computeCellHeight(settings.cellWidth, gaugeStitches, gaugeRows),
+    });
+  };
+
+  const updateCellWidth = (cellWidth: number) => {
+    onChange({
+      ...settings,
+      cellWidth,
+      cellHeight: computeCellHeight(cellWidth, settings.gaugeStitches, settings.gaugeRows),
+    });
   };
 
   const updateLineThickness = (value: number) => {
@@ -66,6 +87,38 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
         </div>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t('settings.gauge')}
+        </label>
+        <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={settings.gaugeStitches}
+              onChange={(e) => updateGauge(Math.max(1, parseInt(e.target.value, 10) || 1), settings.gaugeRows)}
+              className="w-16 border border-gray-300 rounded px-2 py-1 text-center"
+            />
+            <span>{t('settings.gaugeStitchesUnit')}</span>
+          </div>
+          <span className="text-gray-400">×</span>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={settings.gaugeRows}
+              onChange={(e) => updateGauge(settings.gaugeStitches, Math.max(1, parseInt(e.target.value, 10) || 1))}
+              className="w-16 border border-gray-300 rounded px-2 py-1 text-center"
+            />
+            <span>{t('settings.gaugeRowsUnit')}</span>
+          </div>
+          <span className="text-gray-400">{t('settings.gaugePer10cm')}</span>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2">
         <input
           id="denoise"
@@ -106,20 +159,6 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('settings.cellHeight', { value: settings.cellHeight })}
-                </label>
-                <input
-                  type="range"
-                  min={10}
-                  max={80}
-                  value={settings.cellHeight}
-                  onChange={(e) => update('cellHeight', parseInt(e.target.value, 10))}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t('settings.cellWidth', { value: settings.cellWidth })}
                 </label>
                 <input
@@ -127,7 +166,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
                   min={10}
                   max={80}
                   value={settings.cellWidth}
-                  onChange={(e) => update('cellWidth', parseInt(e.target.value, 10))}
+                  onChange={(e) => updateCellWidth(parseInt(e.target.value, 10))}
                   className="w-full"
                 />
               </div>

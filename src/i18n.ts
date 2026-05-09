@@ -31,11 +31,14 @@ const resources = {
 
       // SettingsPanel.tsx
       'settings.colorCount': '色数: {{count}}',
-      'settings.horizontalCells': '横セル数: {{count}}',
+      'settings.horizontalCells': '横目数: {{count}}',
+      'settings.gauge': 'ゲージ（10cm あたり）',
+      'settings.gaugeStitchesUnit': '目',
+      'settings.gaugeRowsUnit': '段',
+      'settings.gaugePer10cm': '/ 10cm',
       'settings.denoise': 'ノイズ除去',
       'settings.advancedShow': '詳細設定を表示',
       'settings.advancedHide': '詳細設定を隠す',
-      'settings.cellHeight': 'セル高さ: {{value}}px',
       'settings.cellWidth': 'セル幅: {{value}}px',
       'settings.lineThickness': '通常グリッド線: {{value}}px',
       'settings.thickLineThickness': '太グリッド線: {{value}}px',
@@ -43,11 +46,13 @@ const resources = {
       'settings.sampling': '生成するたびに結果を変化させる（ランダム）',
 
       // ImageInfoPanel.tsx
-      'info.title': '出力画像情報',
-      'info.horizontalCells': '横セル数',
-      'info.verticalCells': '縦セル数',
-      'info.imageWidth': '画像横サイズ',
-      'info.imageHeight': '画像縦サイズ',
+      'info.title': '出力情報',
+      'info.stitchCols': '横目数',
+      'info.stitchRows': '段数',
+      'info.stitchUnit': '目',
+      'info.rowUnit': '段',
+      'info.knittingWidth': '編み物の横サイズ',
+      'info.knittingHeight': '編み物の縦サイズ',
 
       // RectSelector.tsx
       'rectSelector.title': '元画像・範囲選択',
@@ -148,11 +153,14 @@ const resources = {
 
       // SettingsPanel.tsx
       'settings.colorCount': 'Color Count: {{count}}',
-      'settings.horizontalCells': 'Horizontal Cells: {{count}}',
+      'settings.horizontalCells': 'Horizontal Stitches: {{count}}',
+      'settings.gauge': 'Gauge (per 10cm)',
+      'settings.gaugeStitchesUnit': 'sts',
+      'settings.gaugeRowsUnit': 'rows',
+      'settings.gaugePer10cm': '/ 10cm',
       'settings.denoise': 'Denoise',
       'settings.advancedShow': 'Show Advanced Settings',
       'settings.advancedHide': 'Hide Advanced Settings',
-      'settings.cellHeight': 'Cell Height: {{value}}px',
       'settings.cellWidth': 'Cell Width: {{value}}px',
       'settings.lineThickness': 'Normal Grid Line: {{value}}px',
       'settings.thickLineThickness': 'Thick Grid Line: {{value}}px',
@@ -160,11 +168,13 @@ const resources = {
       'settings.sampling': 'Vary results each time (random)',
 
       // ImageInfoPanel.tsx
-      'info.title': 'Output Image Info',
-      'info.horizontalCells': 'Horizontal Cells',
-      'info.verticalCells': 'Vertical Cells',
-      'info.imageWidth': 'Image Width',
-      'info.imageHeight': 'Image Height',
+      'info.title': 'Output Info',
+      'info.stitchCols': 'Total Stitches',
+      'info.stitchRows': 'Total Rows',
+      'info.stitchUnit': 'sts',
+      'info.rowUnit': 'rows',
+      'info.knittingWidth': 'Knitting Width',
+      'info.knittingHeight': 'Knitting Height',
 
       // RectSelector.tsx
       'rectSelector.title': 'Select Image Area',

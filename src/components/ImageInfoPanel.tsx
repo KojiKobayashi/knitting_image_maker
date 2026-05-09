@@ -14,27 +14,30 @@ export function ImageInfoPanel({ settings, rect, uploadedImage }: ImageInfoPanel
 
   const w = rect && rect.width > 0 ? rect.width : uploadedImage.width;
   const h = rect && rect.height > 0 ? rect.height : uploadedImage.height;
-  const { cellCols, cellRows, outWidth, outHeight } = calcImageInfo(settings, w, h);
+  const { cellCols, cellRows } = calcImageInfo(settings, w, h);
+
+  const widthCm = (cellCols / Math.max(1, settings.gaugeStitches) * 10).toFixed(1);
+  const heightCm = (cellRows / Math.max(1, settings.gaugeRows) * 10).toFixed(1);
 
   return (
     <div>
       <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('info.title')}</h2>
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 space-y-1">
         <div className="flex justify-between">
-          <span>{t('info.horizontalCells')}</span>
-          <span className="font-medium">{cellCols}</span>
+          <span>{t('info.stitchCols')}</span>
+          <span className="font-medium">{cellCols} {t('info.stitchUnit')}</span>
         </div>
         <div className="flex justify-between">
-          <span>{t('info.verticalCells')}</span>
-          <span className="font-medium">{cellRows}</span>
+          <span>{t('info.stitchRows')}</span>
+          <span className="font-medium">{cellRows} {t('info.rowUnit')}</span>
         </div>
         <div className="flex justify-between">
-          <span>{t('info.imageWidth')}</span>
-          <span className="font-medium">{outWidth} px</span>
+          <span>{t('info.knittingWidth')}</span>
+          <span className="font-medium">{widthCm} cm</span>
         </div>
         <div className="flex justify-between">
-          <span>{t('info.imageHeight')}</span>
-          <span className="font-medium">{outHeight} px</span>
+          <span>{t('info.knittingHeight')}</span>
+          <span className="font-medium">{heightCm} cm</span>
         </div>
       </div>
     </div>

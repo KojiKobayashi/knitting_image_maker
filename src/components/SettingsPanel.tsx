@@ -8,7 +8,8 @@ interface SettingsPanelProps {
 }
 
 function computeCellHeight(cellWidth: number, gaugeStitches: number, gaugeRows: number): number {
-  return Math.max(1, Math.round(cellWidth * gaugeStitches / gaugeRows));
+  const safeRows = Math.max(1, gaugeRows);
+  return Math.max(1, Math.round(cellWidth * gaugeStitches / safeRows));
 }
 
 export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {

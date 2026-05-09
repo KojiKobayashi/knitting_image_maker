@@ -16,8 +16,8 @@ export function ImageInfoPanel({ settings, rect, uploadedImage }: ImageInfoPanel
   const h = rect && rect.height > 0 ? rect.height : uploadedImage.height;
   const { cellCols, cellRows } = calcImageInfo(settings, w, h);
 
-  const widthCm = (cellCols / settings.gaugeStitches * 10).toFixed(1);
-  const heightCm = (cellRows / settings.gaugeRows * 10).toFixed(1);
+  const widthCm = (cellCols / Math.max(1, settings.gaugeStitches) * 10).toFixed(1);
+  const heightCm = (cellRows / Math.max(1, settings.gaugeRows) * 10).toFixed(1);
 
   return (
     <div>

@@ -95,6 +95,7 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!dragging || e.changedTouches.length === 0) return;
+    e.preventDefault();
     const touch = e.changedTouches[0];
     const [x, y] = toImageCoords(touch.clientX, touch.clientY);
     const newX = Math.min(dragging.startX, x);

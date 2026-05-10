@@ -72,6 +72,49 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
     }
   }, [dragging]);
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 0) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const [x, y] = toImageCoords(touch.clientX, touch.clientY);
+    setDragging({ startX: x, startY: y });
+    onRectChange({ x, y, width: 0, height: 0 });
+  }, [toImageCoords, onRectChange]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragging || e.touches.length === 0) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const [x, y] = toImageCoords(touch.clientX, touch.clientY);
+    const newX = Math.min(dragging.startX, x);
+    const newY = Math.min(dragging.startY, y);
+    const newW = Math.abs(x - dragging.startX);
+    const newH = Math.abs(y - dragging.startY);
+    onRectChange({ x: newX, y: newY, width: newW, height: newH });
+  }, [dragging, toImageCoords, onRectChange]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!dragging || e.changedTouches.length === 0) return;
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    const [x, y] = toImageCoords(touch.clientX, touch.clientY);
+    const newX = Math.min(dragging.startX, x);
+    const newY = Math.min(dragging.startY, y);
+    const newW = Math.abs(x - dragging.startX);
+    const newH = Math.abs(y - dragging.startY);
+    const finalRect = (newW < MIN_SELECTION_SIZE && newH < MIN_SELECTION_SIZE)
+      ? { x: 0, y: 0, width: imageWidth, height: imageHeight }
+      : { x: newX, y: newY, width: newW, height: newH };
+    onRectChange(finalRect);
+    setDragging(null);
+  }, [dragging, toImageCoords, onRectChange, imageWidth, imageHeight]);
+
+  const handleTouchCancel = useCallback(() => {
+    if (dragging) {
+      setDragging(null);
+    }
+  }, [dragging]);
+
   // Convert image coords to percentage for overlay positioning
   const rectLeft   = (rect.x / imageWidth) * 100;
   const rectTop    = (rect.y / imageHeight) * 100;
@@ -101,11 +144,15 @@ export function RectSelector({ imageUrl, imageWidth, imageHeight, rect, onRectCh
       <div
         ref={containerRef}
         className="relative border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-crosshair select-none"
-        style={{ width: 'fit-content' }}
+        style={{ width: 'fit-content', touchAction: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
       >
         <img
           src={imageUrl}

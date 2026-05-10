@@ -59,38 +59,6 @@ npm run build
 npm run preview
 ```
 
-## 📂 プロジェクト構成
-
-```
-knitting_image_maker/
-├── src/
-│   ├── App.tsx                    # アプリのルートコンポーネント
-│   ├── i18n.ts                    # 多言語対応（日本語/英語）
-│   ├── components/
-│   │   ├── EditableResultView.tsx # 編み図表示・編集画面
-│   │   ├── ImageInfoPanel.tsx     # 画像情報パネル
-│   │   ├── ImageUploader.tsx      # 画像アップロード
-│   │   ├── PaletteUploader.tsx    # パレット CSV アップロード
-│   │   ├── ProcessButton.tsx      # 生成ボタン
-│   │   ├── RectSelector.tsx       # 処理範囲選択
-│   │   ├── ResultView.tsx         # 結果表示
-│   │   └── SettingsPanel.tsx      # 設定パネル
-│   ├── lib/
-│   │   ├── colorUtils.ts          # 色変換ユーティリティ
-│   │   ├── defaultPalette.ts      # デフォルトカラーパレット
-│   │   ├── imageProcessor.ts      # 画像処理ロジック
-│   │   ├── kmeans.ts              # k-means クラスタリング
-│   │   └── paletteLoader.ts       # CSV パレット読み込み
-│   ├── workers/
-│   │   └── processor.worker.ts    # Web Worker（重い処理の非同期実行）
-│   └── types/                     # TypeScript 型定義
-├── index.html
-├── vite.config.ts                 # Vite 設定（base: '/knitting_image_maker/'）
-├── tailwind.config.js
-├── tsconfig.json
-└── package.json
-```
-
 ## 🚀 デプロイ
 
 `main` ブランチへの push をトリガーに GitHub Actions が自動でビルドし、GitHub Pages へデプロイします（[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) 参照）。

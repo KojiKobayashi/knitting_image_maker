@@ -10,6 +10,8 @@ export interface KnittingSettings {
   horizontalCells: number;
   cellHeight: number;
   cellWidth: number;
+  gaugeStitches: number;
+  gaugeRows: number;
   lineThickness: number;
   thickLineThickness: number;
   thickLineInterval: number;

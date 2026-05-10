@@ -10,11 +10,17 @@ import { RectSelector } from './components/RectSelector';
 import { ImageInfoPanel } from './components/ImageInfoPanel';
 import { DEFAULT_PALETTE } from './lib/defaultPalette';
 
+const DEFAULT_GAUGE_STITCHES = 20;
+const DEFAULT_GAUGE_ROWS = 28;
+const DEFAULT_CELL_WIDTH = 33;
+
 const DEFAULT_SETTINGS: KnittingSettings = {
   colorCount: 12,
   horizontalCells: 64,
-  cellHeight: 27,
-  cellWidth: 33,
+  cellHeight: Math.round(DEFAULT_CELL_WIDTH * DEFAULT_GAUGE_STITCHES / DEFAULT_GAUGE_ROWS),
+  cellWidth: DEFAULT_CELL_WIDTH,
+  gaugeStitches: DEFAULT_GAUGE_STITCHES,
+  gaugeRows: DEFAULT_GAUGE_ROWS,
   lineThickness: 3,
   thickLineThickness: 5,
   thickLineInterval: 5,
